@@ -149,12 +149,83 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Paiement unique de ${Formatters.formatCurrency(membershipAmount)}',
+                        'Paiement unique de ${Formatters.formatCurrency(config.totalMembershipPayment)}',
                         style: const TextStyle(
                           color: AppColors.accentGold,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
+                      ),
+                      if (config.cashInFee > 0) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          '(${Formatters.formatCurrency(membershipAmount)} + ${Formatters.formatCurrency(config.cashInFee)} frais)',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Transparency Fee Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 18, color: AppColors.primaryBlue),
+                          SizedBox(width: 8),
+                          Text(
+                            'Détail du paiement',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Adhésion annuelle :', style: TextStyle(color: AppColors.textSecondary)),
+                          Text(Formatters.formatCurrency(membershipAmount), style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Frais opérateur (${config.cashInFeePercent.toStringAsFixed(config.cashInFeePercent.truncateToDouble() == config.cashInFeePercent ? 0 : 1)}%) :',
+                            style: const TextStyle(color: AppColors.textSecondary),
+                          ),
+                          Text(Formatters.formatCurrency(config.cashInFee), style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const Divider(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total à payer :', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                          Text(
+                            Formatters.formatCurrency(config.totalMembershipPayment),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primaryBlue),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Les frais de passerelle Mobile Money sont inclus directement pour garantir la viabilité sans dette de Kobson Cash.',
+                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.3),
                       ),
                     ],
                   ),
@@ -197,7 +268,7 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
 
                 if (_checkoutUrl == null) ...[
                   CustomButton(
-                    text: 'Régler mon adhésion (${Formatters.formatCurrency(membershipAmount)})',
+                    text: 'Régler mon adhésion (${Formatters.formatCurrency(config.totalMembershipPayment)})',
                     icon: Icons.lock_outline,
                     isLoading: _isLoading,
                     onPressed: _initiatePayment,

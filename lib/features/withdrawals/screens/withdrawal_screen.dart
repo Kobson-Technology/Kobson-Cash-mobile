@@ -54,8 +54,8 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final amount = double.parse(_amountController.text.trim());
-    final fee = config.withdrawalFee;
-    final net = amount - fee;
+    final fee = config.calculateWithdrawalFee(amount);
+    final net = config.calculateNetWithdrawal(amount);
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -67,12 +67,16 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Montant brut: ${Formatters.formatCurrency(amount)}',
+              'Montant débité: ${Formatters.formatCurrency(amount)}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            if (fee > 0) Text('Frais de retrait: ${Formatters.formatCurrency(fee)}'),
+            if (fee > 0)
+              Text(
+                'Frais opérateur (${config.withdrawalFeePercent.toStringAsFixed(config.withdrawalFeePercent.truncateToDouble() == config.withdrawalFeePercent ? 0 : 1)}%): ${Formatters.formatCurrency(fee)}',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             Text(
-              'Montant net à recevoir: ${Formatters.formatCurrency(net)}',
+              'Net versé sur votre compte: ${Formatters.formatCurrency(net)}',
               style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.successGreen),
             ),
             const SizedBox(height: 12),
@@ -176,8 +180,8 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
             error: (err, _) => Center(child: Text('Erreur: $err')),
             data: (wallet) {
               final available = wallet.availableBalance;
-              final fee = config.withdrawalFee;
-              final net = (_requestedAmount > fee) ? (_requestedAmount - fee) : 0.0;
+              final fee = config.calculateWithdrawalFee(_requestedAmount);
+              final net = config.calculateNetWithdrawal(_requestedAmount);
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -316,16 +320,19 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('Montant brut:', style: TextStyle(color: AppColors.textSecondary)),
-                                  Text(Formatters.formatCurrency(_requestedAmount)),
+                                  const Text('Montant débité :', style: TextStyle(color: AppColors.textSecondary)),
+                                  Text(Formatters.formatCurrency(_requestedAmount), style: const TextStyle(fontWeight: FontWeight.w600)),
                                 ],
                               ),
                               const SizedBox(height: 6),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('Frais de traitement:', style: TextStyle(color: AppColors.textSecondary)),
-                                  Text(Formatters.formatCurrency(fee)),
+                                  Text(
+                                    'Frais opérateur (${config.withdrawalFeePercent.toStringAsFixed(config.withdrawalFeePercent.truncateToDouble() == config.withdrawalFeePercent ? 0 : 1)}%) :',
+                                    style: const TextStyle(color: AppColors.textSecondary),
+                                  ),
+                                  Text(Formatters.formatCurrency(fee), style: const TextStyle(fontWeight: FontWeight.w600)),
                                 ],
                               ),
                               const Divider(height: 16),
@@ -333,7 +340,7 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'Net à recevoir:',
+                                    'Net à recevoir sur votre compte :',
                                     style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                                   ),
                                   Text(
@@ -345,6 +352,11 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
                                     ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Les frais de déboursement Mobile Money sont imputés au montant retiré. Kobson Cash applique une politique de zéro dette.',
+                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.2),
                               ),
                             ],
                           ),
