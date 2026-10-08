@@ -59,6 +59,7 @@ class AuthNotifier extends Notifier<AuthState> {
         phoneNumber: res['phoneNumber'] ?? '',
         referralCode: res['referralCode'] ?? '',
         hasActiveMembership: res['status'] == 2 || res['status'] == 'Active',
+        photo: res['photo'],
       );
       state = state.copyWith(isAuthenticated: true, user: user);
     } catch (_) {
@@ -141,6 +142,28 @@ class AuthNotifier extends Notifier<AuthState> {
         requiresAuth: true,
       );
       state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateProfilePhoto(String base64Photo) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _apiClient.put(
+        '/api/v1/members/me/photo',
+        body: {'photo': base64Photo},
+      );
+      if (state.user != null) {
+        state = state.copyWith(
+          isLoading: false,
+          user: state.user!.copyWith(photo: base64Photo),
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

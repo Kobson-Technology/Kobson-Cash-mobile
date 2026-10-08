@@ -55,6 +55,19 @@ class ApiClient {
     return _handleResponse(response, () => post(endpoint, body: body, requiresAuth: requiresAuth), requiresAuth);
   }
 
+  Future<dynamic> put(String endpoint, {dynamic body, bool requiresAuth = true}) async {
+    final url = Uri.parse('$_baseUrl$endpoint');
+    final headers = await _getHeaders(requiresAuth: requiresAuth);
+
+    final response = await _client.put(
+      url,
+      headers: headers,
+      body: body != null ? jsonEncode(body) : null,
+    );
+
+    return _handleResponse(response, () => put(endpoint, body: body, requiresAuth: requiresAuth), requiresAuth);
+  }
+
   Future<dynamic> _handleResponse(
     http.Response response,
     Future<dynamic> Function() retryCall,

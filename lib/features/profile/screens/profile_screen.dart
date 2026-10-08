@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/image_converter.dart';
+import '../../auth/models/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../membership/screens/membership_payment_screen.dart';
@@ -45,19 +48,85 @@ class ProfileScreen extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
-                    child: Text(
-                      user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'K',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlue,
-                      ),
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final photoBytes = ImageConverter.decodeBase64Photo(user?.photo);
+                      return Column(
+                        children: [
+                          Stack(
+                            children: [
+                              GestureDetector(
+                                onTap: () => _showPhotoOptions(context, ref, user),
+                                child: CircleAvatar(
+                                  radius: 44,
+                                  backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
+                                  backgroundImage: photoBytes != null ? MemoryImage(photoBytes) : null,
+                                  child: photoBytes == null
+                                      ? Text(
+                                          user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'K',
+                                          style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primaryBlue,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () => _showPhotoOptions(context, ref, user),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryBlue,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.15),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: () => _showPhotoOptions(context, ref, user),
+                            icon: const Icon(Icons.edit, size: 14, color: AppColors.primaryBlue),
+                            label: Text(
+                              user?.photo != null && user!.photo!.isNotEmpty
+                                  ? 'Modifier la photo'
+                                  : 'Ajouter une photo (max 500 Ko)',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   Text(
                     user?.fullName ?? 'Membre',
                     style: const TextStyle(
@@ -353,5 +422,189 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _showPhotoOptions(BuildContext context, WidgetRef ref, UserModel? user) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Text(
+                'Photo de profil',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Conversion & compression automatique (taille max : 500 Ko)',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE8F1FF),
+                  child: Icon(Icons.photo_camera, color: AppColors.primaryBlue),
+                ),
+                title: const Text('Prendre une photo'),
+                subtitle: const Text('Utiliser l\'appareil photo'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndProcessImage(context, ref, ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE8F1FF),
+                  child: Icon(Icons.photo_library, color: AppColors.primaryBlue),
+                ),
+                title: const Text('Choisir depuis la galerie'),
+                subtitle: const Text('Importer une photo de votre appareil'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndProcessImage(context, ref, ImageSource.gallery);
+                },
+              ),
+              if (user?.photo != null && user!.photo!.isNotEmpty) ...[
+                const Divider(),
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFFFECEC),
+                    child: Icon(Icons.delete_outline, color: AppColors.errorRed),
+                  ),
+                  title: const Text('Supprimer la photo', style: TextStyle(color: AppColors.errorRed)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _deletePhoto(context, ref);
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndProcessImage(BuildContext context, WidgetRef ref, ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const PopScope(
+          canPop: false,
+          child: Center(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: AppColors.primaryBlue),
+                    SizedBox(height: 16),
+                    Text(
+                      'Optimisation de la photo...',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Compression garantie sous 500 Ko',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final base64Photo = await ImageConverter.processAndConvertToBase64(pickedFile);
+
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+
+      if (base64Photo == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible de traiter la photo sélectionnée.'),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+        return;
+      }
+
+      final success = await ref.read(authProvider.notifier).updateProfilePhoto(base64Photo);
+      if (!context.mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo de profil mise à jour avec succès (taille < 500 Ko) !'),
+            backgroundColor: AppColors.successGreen,
+          ),
+        );
+      } else {
+        final error = ref.read(authProvider).error ?? 'Erreur lors de la mise à jour';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        try {
+          Navigator.of(context, rootNavigator: true).pop();
+        } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur : $e'),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deletePhoto(BuildContext context, WidgetRef ref) async {
+    final success = await ref.read(authProvider.notifier).updateProfilePhoto('');
+    if (!context.mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Photo de profil retirée.'),
+        ),
+      );
+    }
   }
 }

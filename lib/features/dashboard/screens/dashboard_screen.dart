@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/image_converter.dart';
 import '../../../shared/widgets/balance_card.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../membership/screens/membership_payment_screen.dart';
@@ -42,17 +43,25 @@ class DashboardScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
-                          child: Text(
-                            user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'K',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryBlue,
-                            ),
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final photoBytes = ImageConverter.decodeBase64Photo(user?.photo);
+                            return CircleAvatar(
+                              radius: 24,
+                              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
+                              backgroundImage: photoBytes != null ? MemoryImage(photoBytes) : null,
+                              child: photoBytes == null
+                                  ? Text(
+                                      user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'K',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primaryBlue,
+                                      ),
+                                    )
+                                  : null,
+                            );
+                          },
                         ),
                         const SizedBox(width: 12),
                         Column(
