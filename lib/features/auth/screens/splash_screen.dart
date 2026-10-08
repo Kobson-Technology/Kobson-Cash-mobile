@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../dashboard/screens/main_shell.dart';
 import '../providers/auth_provider.dart';
-import 'onboarding_screen.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -19,7 +19,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
     final auth = ref.read(authProvider);
@@ -31,7 +31,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
   }
