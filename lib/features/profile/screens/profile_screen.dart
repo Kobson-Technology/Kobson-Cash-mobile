@@ -199,7 +199,7 @@ class ProfileScreen extends ConsumerWidget {
                     const Divider(height: 1, indent: 56),
                     ListTile(
                       leading: const Icon(Icons.star_outline, color: AppColors.accentGold),
-                      title: const Text('Activer mon adhésion', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold)),
+                      title: const Text('Payer mon adhésion', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold)),
                       subtitle: const Text('Accédez aux commissions & retraits', style: TextStyle(fontSize: 12)),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                       onTap: () {

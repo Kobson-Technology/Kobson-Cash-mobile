@@ -33,10 +33,7 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
           _isLoading = false;
         });
 
-        final uri = Uri.parse(checkoutUrl);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
+        await _openPayDunya(checkoutUrl);
       } else {
         throw Exception("URL de paiement introuvable dans la réponse.");
       }
@@ -49,6 +46,29 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
             backgroundColor: AppColors.errorRed,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _openPayDunya(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Impossible d\'ouvrir la page de paiement : $e'),
+              backgroundColor: AppColors.errorRed,
+            ),
+          );
+        }
       }
     }
   }
@@ -284,21 +304,17 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
 
                 if (_checkoutUrl == null) ...[
                   CustomButton(
-                    text: 'Régler mon adhésion (${Formatters.formatCurrency(config.totalMembershipPayment)})',
-                    icon: Icons.lock_outline,
+                    text: 'Payer mon adhésion',
+                    icon: Icons.payment,
                     isLoading: _isLoading,
                     onPressed: _initiatePayment,
                   ),
                 ] else ...[
                   CustomButton(
-                    text: 'Ouvrir la passerelle PayDunya',
+                    text: 'Payer mon adhésion',
                     icon: Icons.open_in_new,
-                    onPressed: () async {
-                      final uri = Uri.parse(_checkoutUrl!);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      }
-                    },
+                    isLoading: _isLoading,
+                    onPressed: () => _openPayDunya(_checkoutUrl!),
                   ),
                   const SizedBox(height: 12),
                   CustomButton(
@@ -307,6 +323,17 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
                     isLoading: _isLoading,
                     backgroundColor: AppColors.successGreen,
                     onPressed: _checkPaymentStatus,
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: _isLoading ? null : _initiatePayment,
+                      icon: const Icon(Icons.refresh, size: 16, color: AppColors.textSecondary),
+                      label: const Text(
+                        'Générer un nouveau lien de paiement',
+                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      ),
+                    ),
                   ),
                 ],
               ],

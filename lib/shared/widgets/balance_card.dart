@@ -146,7 +146,7 @@ class _BalanceCardState extends State<BalanceCard> {
                     child: ElevatedButton.icon(
                       onPressed: widget.onMembership,
                       icon: Icon(widget.hasActiveMembership ? Icons.verified : Icons.stars_rounded, size: 18),
-                      label: Text(widget.hasActiveMembership ? 'Adhésion Active' : 'Activer Adhésion'),
+                      label: Text(widget.hasActiveMembership ? 'Adhésion Active' : 'Payer Adhésion'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.hasActiveMembership ? const Color(0xFF10B981) : AppTheme.accentGold,
                         foregroundColor: Colors.white,
