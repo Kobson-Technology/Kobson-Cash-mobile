@@ -10,6 +10,8 @@ import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../membership/screens/membership_payment_screen.dart';
 import 'security_screen.dart';
+import '../../../core/config/app_config.dart';
+import '../../../core/services/app_update_service.dart';
 
 class ProfileScreen extends ConsumerWidget {
 
@@ -383,6 +385,17 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       );
                     },
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  ListTile(
+                    leading: const Icon(Icons.system_update_alt_rounded, color: AppColors.primaryBlue),
+                    title: const Text('Mise à jour de l\'application'),
+                    subtitle: const Text(
+                      'Version ${AppConfig.appVersion} • Vérifier les nouveautés',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                    onTap: () => AppUpdateService.checkManually(context, ref),
                   ),
                   const Divider(height: 1, indent: 56),
                   ListTile(

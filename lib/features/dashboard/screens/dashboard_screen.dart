@@ -12,12 +12,28 @@ import '../../referral/screens/referral_screen.dart';
 import '../../wallet/screens/transactions_screen.dart';
 import '../../withdrawals/screens/withdrawal_screen.dart';
 import '../providers/dashboard_provider.dart';
+import '../../../core/services/app_update_service.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AppUpdateService.checkSilently(context, ref);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final dashboardAsync = ref.watch(dashboardProvider);
 
