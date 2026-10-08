@@ -70,10 +70,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           width: 140,
                           height: 140,
                           decoration: BoxDecoration(
-                            color: (item['color'] as Color).withValues(alpha: 0.12),
+                            color: Colors.white,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (item['color'] as Color).withValues(alpha: 0.15),
+                                blurRadius: 20,
+                                spreadRadius: 4,
+                              ),
+                            ],
                           ),
-                          child: Icon(item['icon'] as IconData, size: 70, color: item['color'] as Color),
+                          child: ClipOval(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: i == 0
+                                  ? Image.asset(
+                                      'assets/images/logo.png',
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => Icon(
+                                        item['icon'] as IconData,
+                                        size: 70,
+                                        color: item['color'] as Color,
+                                      ),
+                                    )
+                                  : Icon(
+                                      item['icon'] as IconData,
+                                      size: 70,
+                                      color: item['color'] as Color,
+                                    ),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 36),
                         Text(
