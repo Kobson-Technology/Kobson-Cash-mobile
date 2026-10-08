@@ -9,8 +9,8 @@ class AppConfig {
   static const String appTagline = 'GÉREZ • PARRAINEZ • GAGNEZ';
   static const String currencySymbol = 'FCFA';
 
-  static const String appVersion = '2.0.2';
-  static const int appBuildNumber = 4;
+  static const String appVersion = '2.0.3';
+  static const int appBuildNumber = 7;
   static const String fallbackDownloadUrl =
-      'https://github.com/Kobson-Technology/Kobson-Cash-Versionnage/releases/download/v2.0.2/KobsonCash.apk';
+      'https://github.com/Kobson-Technology/Kobson-Cash-Versionnage/releases/download/v2.0.3/KobsonCash.apk';
 }

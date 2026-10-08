@@ -365,40 +365,88 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 20),
                   ],
 
-                  CustomTextField(
-                    label: 'Email ou Numéro de téléphone',
-                    hintText: 'ex: kouame@gmail.com ou 0701020304',
-                    controller: _identifierController,
-                    prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Veuillez saisir votre email ou téléphone';
-                      }
-                      return null;
-                    },
-                  ),
                   if (_isRememberedUser) ...[
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: InkWell(
-                        onTap: _switchAccount,
-                        child: const Text(
-                          'Changer de compte ?',
-                          style: TextStyle(
-                            color: AppColors.primaryBlue,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.person_rounded, color: AppColors.primaryBlue, size: 26),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _rememberedUserName ?? 'Adhérent Kobson Cash',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _identifierController.text,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _switchAccount,
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            ),
+                            child: const Text(
+                              'Changer',
+                              style: TextStyle(
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 20),
+                  ] else ...[
+                    CustomTextField(
+                      label: 'Email ou Numéro de téléphone',
+                      hintText: 'ex: kouame@gmail.com ou 0701020304',
+                      controller: _identifierController,
+                      prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Veuillez saisir votre email ou téléphone';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
                   ],
-                  const SizedBox(height: 20),
 
                   CustomTextField(
-                    label: 'Mot de passe',
+                    label: 'Mot de passe secret',
                     hintText: '••••••••',
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -424,49 +472,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     isLoading: authState.isLoading,
                     onPressed: _handleLogin,
                   ),
-                  const SizedBox(height: 20),
 
-                  Row(
-                    children: [
-                      const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Text(
-                          'OU',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                  if (!_isRememberedUser) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Text(
+                            'OU',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      ),
-                      const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    GoogleSignInButton(
+                      isLoading: _isGoogleLoading,
+                      onPressed: _handleGoogleSignIn,
+                    ),
+                  ],
 
-                  GoogleSignInButton(
-                    isLoading: _isGoogleLoading,
-                    onPressed: _handleGoogleSignIn,
-                  ),
                   const SizedBox(height: 24),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "Vous n'avez pas de compte ? ",
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      Text(
+                        _isRememberedUser ? "Autre utilisateur ? " : "Vous n'avez pas de compte ? ",
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                          );
+                          if (_isRememberedUser) {
+                            _switchAccount();
+                          } else {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            );
+                          }
                         },
-                        child: const Text(
-                          "S'inscrire",
-                          style: TextStyle(
+                        child: Text(
+                          _isRememberedUser ? "Changer de compte" : "S'inscrire",
+                          style: const TextStyle(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
