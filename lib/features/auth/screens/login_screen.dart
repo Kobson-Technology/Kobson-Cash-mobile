@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/storage/token_storage.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/google_sign_in_button.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 import '../../dashboard/screens/main_shell.dart';
@@ -19,6 +21,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isGoogleLoading = false;
+  String? _rememberedUserName;
+  bool _isRememberedUser = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedUser();
+  }
+
+  Future<void> _loadRememberedUser() async {
+    final lastId = await TokenStorage.getLastIdentifier();
+    final lastName = await TokenStorage.getLastUserName();
+    if (lastId != null && lastId.isNotEmpty && mounted) {
+      setState(() {
+        _identifierController.text = lastId;
+        _rememberedUserName = lastName;
+        _isRememberedUser = true;
+      });
+    }
+  }
+
+  void _switchAccount() {
+    setState(() {
+      _identifierController.clear();
+      _passwordController.clear();
+      _rememberedUserName = null;
+      _isRememberedUser = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -41,6 +73,212 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         (route) => false,
       );
     }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final googleEmailController = TextEditingController();
+    final googlePasswordController = TextEditingController();
+    final googleFirstNameController = TextEditingController();
+    final googleLastNameController = TextEditingController();
+    final googleReferralController = TextEditingController();
+    bool isRegisterMode = false;
+    bool obscureGooglePassword = true;
+    String? localError;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const CustomPaint(
+                        size: Size(26, 26),
+                        painter: GoogleLogoPainter(),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          isRegisterMode ? 'Inscription via Google' : 'Connexion via Google',
+                          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isRegisterMode
+                        ? 'Créez votre compte Kobson Cash associé à Google en définissant votre mot de passe secret.'
+                        : 'Accédez à votre compte Google. Votre mot de passe secret est requis pour accéder à vos fonds.',
+                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
+                  ),
+                  const SizedBox(height: 18),
+
+                  if (localError != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(localError!, style: const TextStyle(color: AppColors.errorRed, fontSize: 13)),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+
+                  if (isRegisterMode) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            label: 'Prénom',
+                            hintText: 'ex: Kouamé',
+                            controller: googleFirstNameController,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: CustomTextField(
+                            label: 'Nom',
+                            hintText: 'ex: Jean',
+                            controller: googleLastNameController,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+
+                  CustomTextField(
+                    label: 'Adresse Email Google',
+                    hintText: 'ex: votre.compte@gmail.com',
+                    controller: googleEmailController,
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 14),
+
+                  CustomTextField(
+                    label: isRegisterMode ? 'Définir un Mot de passe' : 'Mot de passe Kobson Cash',
+                    hintText: '••••••••',
+                    controller: googlePasswordController,
+                    obscureText: obscureGooglePassword,
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureGooglePassword ? Icons.visibility_off : Icons.visibility,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () => setSheetState(() => obscureGooglePassword = !obscureGooglePassword),
+                    ),
+                  ),
+
+                  if (isRegisterMode) ...[
+                    const SizedBox(height: 14),
+                    CustomTextField(
+                      label: 'Code de parrainage (Optionnel)',
+                      hintText: 'ex: KOB12345',
+                      controller: googleReferralController,
+                      prefixIcon: const Icon(Icons.card_giftcard, color: AppColors.textSecondary),
+                    ),
+                  ],
+
+                  const SizedBox(height: 22),
+                  CustomButton(
+                    text: isRegisterMode ? 'Créer mon compte Google' : 'Déverrouiller l\'accès',
+                    isLoading: _isGoogleLoading,
+                    onPressed: () async {
+                      final email = googleEmailController.text.trim();
+                      final pass = googlePasswordController.text;
+                      if (email.isEmpty) {
+                        setSheetState(() => localError = 'Veuillez saisir votre email Google');
+                        return;
+                      }
+                      if (pass.isEmpty) {
+                        setSheetState(() => localError = 'Veuillez saisir votre mot de passe secret');
+                        return;
+                      }
+                      setSheetState(() {
+                        localError = null;
+                        _isGoogleLoading = true;
+                      });
+
+                      final navigator = Navigator.of(context);
+                      final success = await ref.read(authProvider.notifier).googleAuth(
+                            email: email,
+                            firstName: isRegisterMode ? googleFirstNameController.text.trim() : '',
+                            lastName: isRegisterMode ? googleLastNameController.text.trim() : '',
+                            password: pass,
+                            referralCode: isRegisterMode ? googleReferralController.text.trim() : null,
+                          );
+
+                      if (!mounted) return;
+                      setSheetState(() => _isGoogleLoading = false);
+
+                      if (success) {
+                        if (ctx.mounted) {
+                          Navigator.of(ctx).pop();
+                        }
+                        navigator.pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const MainShell()),
+                          (route) => false,
+                        );
+                      } else {
+                        final err = ref.read(authProvider).error ?? 'Erreur lors de l\'authentification Google';
+                        setSheetState(() => localError = err);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        setSheetState(() {
+                          isRegisterMode = !isRegisterMode;
+                          localError = null;
+                        });
+                      },
+                      child: Text(
+                        isRegisterMode
+                            ? 'Déjà inscrit ? Se connecter avec Google'
+                            : 'Nouveau compte Google ? S\'inscrire ici',
+                        style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -79,20 +317,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Connexion',
+                  Text(
+                    _isRememberedUser
+                        ? 'Bonjour, ${_rememberedUserName ?? 'Adhérent'} !'
+                        : 'Connexion',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
+                    style: const TextStyle(
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Bienvenue sur Kobson Cash. Accédez à votre compte pour gérer vos gains.',
+                  Text(
+                    _isRememberedUser
+                        ? 'Veuillez saisir votre mot de passe pour déverrouiller votre coffre et accéder à vos gains.'
+                        : 'Bienvenue sur Kobson Cash. Accédez à votre compte pour gérer vos gains.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
@@ -136,6 +378,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
+                  if (_isRememberedUser) ...[
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: _switchAccount,
+                        child: const Text(
+                          'Changer de compte ?',
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
 
                   CustomTextField(
@@ -161,9 +420,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 28),
 
                   CustomButton(
-                    text: 'Se connecter',
+                    text: _isRememberedUser ? 'Déverrouiller l\'accès' : 'Se connecter',
                     isLoading: authState.isLoading,
                     onPressed: _handleLogin,
+                  ),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Text(
+                          'OU',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  GoogleSignInButton(
+                    isLoading: _isGoogleLoading,
+                    onPressed: _handleGoogleSignIn,
                   ),
                   const SizedBox(height: 24),
 

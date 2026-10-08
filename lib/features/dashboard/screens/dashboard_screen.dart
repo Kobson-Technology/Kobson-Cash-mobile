@@ -278,9 +278,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         BalanceCard(
                           availableBalance: dash.availableBalance,
                           heldBalance: dash.heldBalance,
+                          hasActiveMembership: dash.hasActiveMembership,
                           onWithdrawPressed: () {
+                            if (!dash.hasActiveMembership) {
+                              _showChestLockedDialog(context);
+                            } else {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const WithdrawalScreen()),
+                              );
+                            }
+                          },
+                          onMembership: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const WithdrawalScreen()),
+                              MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
                             );
                           },
                         ),
@@ -292,13 +302,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           children: [
                             _buildQuickAction(
                               context,
-                              icon: Icons.account_balance_wallet,
+                              icon: dash.hasActiveMembership ? Icons.account_balance_wallet : Icons.lock_rounded,
                               label: 'Retirer',
-                              color: AppColors.primaryBlue,
+                              color: dash.hasActiveMembership ? AppColors.primaryBlue : const Color(0xFFD97706),
                               onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => const WithdrawalScreen()),
-                                );
+                                if (!dash.hasActiveMembership) {
+                                  _showChestLockedDialog(context);
+                                } else {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const WithdrawalScreen()),
+                                  );
+                                }
                               },
                             ),
                             _buildQuickAction(
@@ -556,4 +570,101 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     );
   }
+
+  void _showChestLockedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.lock_rounded, color: Color(0xFFD97706), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Coffre Verrouillé',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: AnimatedGlowingChest(
+                  size: 80,
+                  hasKey: false,
+                  showBadge: false,
+                  showFloatingKey: true,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Pour effectuer des retraits de vos gains et commissions, vous devez impérativement débloquer votre Coffre aux Gains (4 500 FCFA) et obtenir votre Clé d\'Or.',
+              style: TextStyle(fontSize: 14, height: 1.4, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.shield_outlined, color: AppColors.successGreen, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Activation unique à vie • Débloque instantanément les déboursements Mobile Money.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Fermer', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentGold,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
+              );
+            },
+            icon: const Icon(Icons.vpn_key_rounded, size: 18),
+            label: const Text('Obtenir la Clé', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

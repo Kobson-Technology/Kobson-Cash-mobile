@@ -83,6 +83,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
       await TokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
       final user = UserModel.fromJson(userData);
+      await TokenStorage.saveLastUser(identifier: identifier, userName: user.fullName);
 
       state = state.copyWith(isLoading: false, isAuthenticated: true, user: user);
       return true;
@@ -121,6 +122,46 @@ class AuthNotifier extends Notifier<AuthState> {
 
       await TokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
       final user = UserModel.fromJson(userData);
+      await TokenStorage.saveLastUser(identifier: email, userName: user.fullName);
+
+      state = state.copyWith(isLoading: false, isAuthenticated: true, user: user);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> googleAuth({
+    required String email,
+    required String firstName,
+    required String lastName,
+    String? googleId,
+    String? referralCode,
+    String? password,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final res = await _apiClient.post(
+        '/api/v1/auth/google',
+        body: {
+          'email': email,
+          'firstName': firstName,
+          'lastName': lastName,
+          'googleId': googleId,
+          'referralCode': (referralCode != null && referralCode.trim().isNotEmpty) ? referralCode.trim() : null,
+          if (password != null && password.isNotEmpty) 'password': password,
+        },
+        requiresAuth: false,
+      );
+
+      final accessToken = res['accessToken'] as String;
+      final refreshToken = res['refreshToken'] as String;
+      final userData = res['user'] as Map<String, dynamic>;
+
+      await TokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+      final user = UserModel.fromJson(userData);
+      await TokenStorage.saveLastUser(identifier: email, userName: user.fullName);
 
       state = state.copyWith(isLoading: false, isAuthenticated: true, user: user);
       return true;

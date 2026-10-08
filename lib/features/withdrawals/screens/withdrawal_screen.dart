@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/config_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/animated_glowing_chest.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/operator_brand_logo.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../membership/screens/membership_payment_screen.dart';
 import '../../wallet/providers/wallet_provider.dart';
 import '../models/withdrawal_models.dart';
 import '../providers/withdrawal_provider.dart';
@@ -51,6 +54,17 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
   }
 
   Future<void> _handleConfirmWithdrawal(PublicConfig config, double availableBalance) async {
+    final user = ref.read(authProvider).user;
+    if (user != null && !user.hasActiveMembership) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Votre Coffre aux Gains n\'est pas activé. Activez votre Coffre pour effectuer des retraits.'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
     final amount = double.parse(_amountController.text.trim());
@@ -80,7 +94,14 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.successGreen),
             ),
             const SizedBox(height: 12),
-            Text('Opérateur: ${_selectedOperator.displayName}'),
+            Row(
+              children: [
+                OperatorBrandLogo(operator: _selectedOperator, size: 22),
+                const SizedBox(width: 8),
+                Text('Opérateur: ${_selectedOperator.displayName}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text('Numéro: ${_phoneController.text.trim()}'),
             const SizedBox(height: 16),
             Container(
@@ -175,6 +196,9 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Erreur: $err')),
         data: (config) {
+          final user = ref.watch(authProvider).user;
+          final hasActiveMembership = user?.hasActiveMembership ?? false;
+
           return walletAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => Center(child: Text('Erreur: $err')),
@@ -227,7 +251,85 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
+
+                      // Locked Warning Banner if Chest is not active
+                      if (!hasActiveMembership) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const AnimatedGlowingChest(
+                                size: 54,
+                                hasKey: false,
+                                showBadge: false,
+                                showFloatingKey: true,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.lock_rounded, color: AppColors.accentGold, size: 16),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Retraits Suspendus • Clé Requise',
+                                          style: TextStyle(
+                                            color: AppColors.accentGold,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'Activez votre Coffre (4 500 FCFA) pour débloquer votre Clé d\'Or et effectuer vos retraits Mobile Money.',
+                                      style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.3),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
+                                        );
+                                      },
+                                      child: const Text(
+                                        'Obtenir ma Clé d\'Or →',
+                                        style: TextStyle(
+                                          color: AppColors.accentGold,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
 
                       // Select Operator
                       const Text(
@@ -250,13 +352,14 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
                             onSelected: (selected) {
                               if (selected) setState(() => _selectedOperator = op);
                             },
-                            avatar: Icon(
-                              Icons.payment,
-                              size: 16,
-                              color: isSelected ? Colors.white : AppColors.primaryBlue,
-                            ),
+                            avatar: OperatorBrandLogo(operator: op, size: 24),
                             label: Text(op.displayName),
                             selectedColor: AppColors.primaryBlue,
+                            backgroundColor: Colors.white,
+                            side: BorderSide(
+                              color: isSelected ? AppColors.primaryBlue : const Color(0xFFCBD5E1),
+                              width: isSelected ? 1.5 : 1.0,
+                            ),
                             labelStyle: TextStyle(
                               color: isSelected ? Colors.white : AppColors.textPrimary,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -363,12 +466,33 @@ class _WithdrawalScreenState extends ConsumerState<WithdrawalScreen> {
                         ),
                       const SizedBox(height: 28),
 
-                      CustomButton(
-                        text: 'Confirmer la demande de retrait',
-                        icon: Icons.send_rounded,
-                        isLoading: _isSubmitting,
-                        onPressed: () => _handleConfirmWithdrawal(config, available),
-                      ),
+                      if (hasActiveMembership)
+                        CustomButton(
+                          text: 'Confirmer la demande de retrait',
+                          icon: Icons.send_rounded,
+                          isLoading: _isSubmitting,
+                          onPressed: () => _handleConfirmWithdrawal(config, available),
+                        )
+                      else
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFD97706),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 2,
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.lock_rounded, size: 20),
+                          label: const Text(
+                            'Coffre Verrouillé — Obtenir la Clé (4 500 FCFA)',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                     ],
                   ),
                 ),

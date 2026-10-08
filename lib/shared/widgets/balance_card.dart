@@ -127,14 +127,29 @@ class _BalanceCardState extends State<BalanceCard> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: withdrawCallback,
-                      icon: const Icon(Icons.arrow_upward_rounded, size: 18),
-                      label: const Text('Retirer'),
+                      icon: Icon(
+                        widget.hasActiveMembership ? Icons.arrow_upward_rounded : Icons.lock_rounded,
+                        size: 18,
+                        color: widget.hasActiveMembership ? AppTheme.primaryBlue : const Color(0xFFD97706),
+                      ),
+                      label: Text(
+                        widget.hasActiveMembership ? 'Retirer' : 'Retirer',
+                        style: TextStyle(
+                          color: widget.hasActiveMembership ? AppTheme.primaryBlue : const Color(0xFF92400E),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppTheme.primaryBlue,
+                        backgroundColor: widget.hasActiveMembership ? Colors.white : const Color(0xFFFEF3C7),
+                        foregroundColor: widget.hasActiveMembership ? AppTheme.primaryBlue : const Color(0xFF92400E),
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: widget.hasActiveMembership
+                              ? BorderSide.none
+                              : const BorderSide(color: Color(0xFFF59E0B), width: 1.2),
+                        ),
                         textStyle: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

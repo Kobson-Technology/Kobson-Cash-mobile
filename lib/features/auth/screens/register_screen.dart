@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/google_sign_in_button.dart';
 import '../providers/auth_provider.dart';
 import '../../dashboard/screens/main_shell.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   final String? initialReferralCode;
@@ -255,6 +257,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   text: 'Créer mon compte',
                   isLoading: authState.isLoading,
                   onPressed: _handleRegister,
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        'OU',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                GoogleSignInButton(
+                  text: 'S\'inscrire avec Google',
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
               ],

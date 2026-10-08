@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/operator_brand_logo.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../models/withdrawal_models.dart';
 import '../providers/withdrawal_provider.dart';
@@ -102,18 +103,9 @@ class WithdrawalHistoryScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: AppColors.primaryBlue,
-                  size: 24,
-                ),
+              OperatorBrandLogo(
+                operatorKey: item.operatorName,
+                size: 42,
               ),
               const SizedBox(width: 14),
               Expanded(
