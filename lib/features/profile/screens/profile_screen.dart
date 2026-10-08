@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../membership/screens/membership_payment_screen.dart';
+import 'security_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
+
   const ProfileScreen({super.key});
 
   @override
@@ -155,8 +158,8 @@ class ProfileScreen extends ConsumerWidget {
                     title: const Text('Sécurité & Mot de passe'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fonctionnalité disponible dans le prochain déploiement.')),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SecurityScreen()),
                       );
                     },
                   ),
@@ -169,12 +172,144 @@ class ProfileScreen extends ConsumerWidget {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: const Text('Assistance'),
-                          content: const Text(
-                            'Support Kobson Cash Côte d\'Ivoire\nEmail: contact@kobsoncash.com\nTél: +225 07 00 00 00 00',
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          title: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.support_agent, color: AppColors.primaryBlue),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Assistance Client', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'Une question ou besoin d\'aide ? Notre support est à votre disposition.',
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Email Item
+                              InkWell(
+                                onTap: () async {
+                                  final uri = Uri.parse('mailto:contact@kobsontech.com?subject=Assistance%20Kobson%20Cash');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri);
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.backgroundLight,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.email_outlined, color: AppColors.primaryBlue, size: 20),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Email', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                            Text('contact@kobsontech.com', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+                                        onPressed: () {
+                                          Clipboard.setData(const ClipboardData(text: 'contact@kobsontech.com'));
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Email copié !'), duration: Duration(seconds: 1)),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // Phone Item
+                              InkWell(
+                                onTap: () async {
+                                  final uri = Uri.parse('tel:+2250707186396');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri);
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.backgroundLight,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.phone_outlined, color: AppColors.primaryBlue, size: 20),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Téléphone', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                            Text('+225 07 07 18 63 96', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+                                        onPressed: () {
+                                          Clipboard.setData(const ClipboardData(text: '+2250707186396'));
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Numéro copié !'), duration: Duration(seconds: 1)),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // WhatsApp Action Button
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final uri = Uri.parse('https://wa.me/2250707186396?text=Bonjour%20Kobson%20Cash%2C%20j%27ai%20besoin%20d%27assistance.');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 18),
+                                label: const Text('Discuter sur WhatsApp', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF25D366),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ],
                           ),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer')),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Fermer', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
                           ],
                         ),
                       );

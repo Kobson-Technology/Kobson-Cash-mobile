@@ -129,6 +129,25 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _apiClient.post(
+        '/api/v1/auth/change-password',
+        body: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+        requiresAuth: true,
+      );
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     try {
       final refreshToken = await TokenStorage.getRefreshToken();
@@ -140,5 +159,6 @@ class AuthNotifier extends Notifier<AuthState> {
     state = AuthState();
   }
 }
+
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
