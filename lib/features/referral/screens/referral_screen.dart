@@ -41,7 +41,7 @@ class ReferralScreen extends ConsumerWidget {
         error: (err, _) => Center(child: Text('Erreur: $err')),
         data: (tree) {
           final code = tree.myReferralCode;
-          final link = 'https://cash.kobsontech.com/?ref=$code';
+          final link = 'https://cash.kobsontech.com/register?ref=$code';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
