@@ -58,7 +58,7 @@ class AuthNotifier extends Notifier<AuthState> {
         email: res['email'] ?? '',
         phoneNumber: res['phoneNumber'] ?? '',
         referralCode: res['referralCode'] ?? '',
-        hasActiveMembership: res['status'] == 2 || res['status'] == 'Active',
+        hasActiveMembership: res['hasActiveMembership'] == true,
         photo: res['photo'],
       );
       state = state.copyWith(isAuthenticated: true, user: user);

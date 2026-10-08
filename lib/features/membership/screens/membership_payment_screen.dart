@@ -55,15 +55,22 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
 
   Future<void> _checkPaymentStatus() async {
     setState(() => _isLoading = true);
-    await ref.read(authProvider.notifier).checkAuthStatus();
-    ref.invalidate(dashboardProvider);
-    if (mounted) {
+    final apiClient = ref.read(apiClientProvider);
+
+    try {
+      final verifyRes = await apiClient.post('/api/v1/memberships/verify');
+      final isPaid = verifyRes is Map<String, dynamic> && verifyRes['hasActiveMembership'] == true;
+
+      await ref.read(authProvider.notifier).checkAuthStatus();
+      ref.invalidate(dashboardProvider);
+
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      final user = ref.read(authProvider).user;
-      if (user?.hasActiveMembership == true) {
+
+      if (isPaid) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Félicitations ! Votre adhésion est active.'),
+            content: Text('Félicitations ! Votre paiement a été validé et votre adhésion est active.'),
             backgroundColor: AppColors.successGreen,
           ),
         );
@@ -71,11 +78,20 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Paiement en cours de validation ou non complété. Réessayez dans un instant.'),
+            content: Text('Aucun paiement confirmé reçu. Veuillez finaliser le règlement sur PayDunya.'),
             backgroundColor: AppColors.accentGold,
           ),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la vérification : $e'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
     }
   }
 
