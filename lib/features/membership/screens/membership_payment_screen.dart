@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config/config_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/animated_glowing_chest.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
@@ -90,7 +91,7 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
       if (isPaid) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Félicitations ! Votre paiement a été validé et votre adhésion est active.'),
+            content: Text('Félicitations ! Votre Coffre est maintenant activé et prêt à recevoir vos gains.'),
             backgroundColor: AppColors.successGreen,
           ),
         );
@@ -122,7 +123,7 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text('Adhésion Kobson Cash'),
+        title: const Text('Obtenir la Clé du Coffre'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
@@ -141,64 +142,89 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header Card
+                // Header Card with Animated Glowing Chest & Key
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [AppColors.navyBlue, AppColors.primaryBlue],
+                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
-                        blurRadius: 16,
+                        color: AppColors.accentGold.withValues(alpha: 0.2),
+                        blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
                     ],
                   ),
                   child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.verified_outlined,
-                          color: AppColors.accentGold,
-                          size: 40,
-                        ),
+                      const AnimatedGlowingChest(
+                        size: 130,
+                        hasKey: false,
+                        showBadge: false,
+                        showFloatingKey: true,
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Passez Membre Officiel',
+                        'Obtenez la Clé & Ouvrez votre Coffre',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         'Paiement unique de ${Formatters.formatCurrency(config.totalMembershipPayment)}',
                         style: const TextStyle(
                           color: AppColors.accentGold,
                           fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.vpn_key_rounded, color: AppColors.accentGold, size: 16),
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'Pour avoir la clé, vous devez obligatoirement activer votre Coffre',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       if (config.cashInFee > 0) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           '(${Formatters.formatCurrency(membershipAmount)} + ${Formatters.formatCurrency(config.cashInFee)} frais)',
                           style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
+                            color: Colors.white54,
+                            fontSize: 11,
                           ),
                         ),
                       ],
@@ -232,7 +258,7 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Adhésion annuelle :', style: TextStyle(color: AppColors.textSecondary)),
+                          const Text('Achat du Coffre :', style: TextStyle(color: AppColors.textSecondary)),
                           Text(Formatters.formatCurrency(membershipAmount), style: const TextStyle(fontWeight: FontWeight.w600)),
                         ],
                       ),
@@ -280,38 +306,38 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
                 const SizedBox(height: 16),
 
                 _buildBenefitItem(
-                  icon: Icons.account_tree_outlined,
-                  title: 'Plan de rémunération à 3 niveaux',
-                  subtitle: 'Gagnez ${Formatters.formatCurrency(c1)} (Niveau 1), ${Formatters.formatCurrency(c2)} (Niveau 2), et ${Formatters.formatCurrency(c3)} (Niveau 3).',
+                  icon: Icons.vpn_key_rounded,
+                  title: "La Clé d'Or d'activation",
+                  subtitle: "Activez votre coffre pour recevoir votre Clé d'Or. Sans cette clé, votre coffre reste fermé et aucun retrait n'est possible.",
+                ),
+                _buildBenefitItem(
+                  icon: Icons.auto_awesome,
+                  title: 'Remplissez votre Coffre à 3 niveaux',
+                  subtitle: 'Chaque ami qui active son coffre dépose de l\'or dans le vôtre : ${Formatters.formatCurrency(c1)} (Niveau 1), ${Formatters.formatCurrency(c2)} (Niveau 2), et ${Formatters.formatCurrency(c3)} (Niveau 3).',
                 ),
                 _buildBenefitItem(
                   icon: Icons.mobile_friendly_outlined,
-                  title: 'Paiements Mobile Money',
-                  subtitle: 'Réglez simplement et retirez vos gains directement via Wave, Orange Money, MTN, Moov et Djamo.',
+                  title: 'Retraits Mobile Money instantanés',
+                  subtitle: 'Retirez l\'or de votre coffre directement via Wave, Orange Money, MTN, Moov et Djamo.',
                 ),
                 _buildBenefitItem(
                   icon: Icons.qr_code_2_outlined,
-                  title: 'Lien & QR Code exclusifs',
-                  subtitle: 'Partagez votre code personnel avec vos contacts en un clic.',
-                ),
-                _buildBenefitItem(
-                  icon: Icons.shield_outlined,
-                  title: 'Sécurité & Traçabilité totale',
-                  subtitle: 'Chaque centime est garanti et enregistré dans un grand livre financier infalsifiable.',
+                  title: 'Votre Clé de partage & QR Code',
+                  subtitle: 'Partagez votre clé personnelle avec vos contacts en un clic pour faire grandir vos gains.',
                 ),
 
                 const SizedBox(height: 32),
 
                 if (_checkoutUrl == null) ...[
                   CustomButton(
-                    text: 'Payer mon adhésion',
-                    icon: Icons.payment,
+                    text: 'Activer le Coffre & Obtenir la Clé',
+                    icon: Icons.vpn_key_rounded,
                     isLoading: _isLoading,
                     onPressed: _initiatePayment,
                   ),
                 ] else ...[
                   CustomButton(
-                    text: 'Payer mon adhésion',
+                    text: 'Payer & Débloquer la Clé',
                     icon: Icons.open_in_new,
                     isLoading: _isLoading,
                     onPressed: () => _openPayDunya(_checkoutUrl!),

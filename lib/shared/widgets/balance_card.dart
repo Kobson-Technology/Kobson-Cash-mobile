@@ -59,10 +59,10 @@ class _BalanceCardState extends State<BalanceCard> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 22),
+                  const Icon(Icons.savings_rounded, color: Colors.white, size: 22),
                   const SizedBox(width: 8),
                   Text(
-                    'Solde Disponible',
+                    'Solde de mon Coffre',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
@@ -145,8 +145,11 @@ class _BalanceCardState extends State<BalanceCard> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: widget.onMembership,
-                      icon: Icon(widget.hasActiveMembership ? Icons.verified : Icons.stars_rounded, size: 18),
-                      label: Text(widget.hasActiveMembership ? 'Adhésion Active' : 'Payer Adhésion'),
+                      icon: Icon(
+                        widget.hasActiveMembership ? Icons.lock_open_rounded : Icons.vpn_key_rounded,
+                        size: 18,
+                      ),
+                      label: Text(widget.hasActiveMembership ? 'Coffre Ouvert' : 'Obtenir la Clé'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.hasActiveMembership ? const Color(0xFF10B981) : AppTheme.accentGold,
                         foregroundColor: Colors.white,

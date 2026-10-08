@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/image_converter.dart';
+import '../../../shared/widgets/animated_glowing_chest.dart';
 import '../../../shared/widgets/balance_card.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../membership/screens/membership_payment_screen.dart';
@@ -137,39 +138,63 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFFDE68A)),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppColors.accentGold.withValues(alpha: 0.6),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accentGold.withValues(alpha: 0.2),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.warning_amber_rounded, color: AppColors.accentGold, size: 28),
-                                const SizedBox(width: 12),
-                                Expanded(
+                                const AnimatedGlowingChest(
+                                  size: 68,
+                                  hasKey: false,
+                                  showBadge: false,
+                                  showFloatingKey: true,
+                                ),
+                                const SizedBox(width: 14),
+                                const Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        'Adhésion en attente',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          color: Color(0xFF92400E),
-                                        ),
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.vpn_key_rounded, color: AppColors.accentGold, size: 16),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Clé Manquante',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              color: AppColors.accentGold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      SizedBox(height: 2),
+                                      SizedBox(height: 4),
                                       Text(
-                                        'Activez votre compte pour débloquer les commissions et retraits.',
-                                        style: TextStyle(fontSize: 12, color: Color(0xFFB45309)),
+                                        'Pour avoir la clé et débloquer vos retraits, vous devez impérativement activer votre Coffre (4 500 FCFA).',
+                                        style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.3),
                                       ),
                                     ],
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.accentGold,
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                   onPressed: () {
@@ -177,7 +202,71 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
                                     );
                                   },
-                                  child: const Text('Activer', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                                  child: const Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.vpn_key_rounded, color: Colors.white, size: 16),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Obtenir la Clé',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ] else ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF064E3B), Color(0xFF047857)],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFF34D399), width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              children: [
+                                AnimatedGlowingChest(
+                                  size: 42,
+                                  hasKey: true,
+                                  showBadge: false,
+                                  showFloatingKey: false,
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '🗝️ Clé d\'Or Active • Coffre Débloqué',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Votre Coffre est ouvert et prêt à recevoir vos gains et retraits.',
+                                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),

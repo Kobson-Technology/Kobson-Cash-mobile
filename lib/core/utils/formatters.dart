@@ -24,7 +24,7 @@ class Formatters {
   static String formatTransactionType(String type) {
     switch (type.toLowerCase()) {
       case 'membershippayment':
-        return 'Paiement Adhésion';
+        return 'Achat du Coffre';
       case 'referralcommission':
         return 'Commission de Parrainage';
       case 'withdrawal':

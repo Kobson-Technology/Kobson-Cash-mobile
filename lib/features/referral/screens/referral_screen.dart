@@ -67,7 +67,7 @@ class ReferralScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       const Text(
-                        'Votre Code de Parrainage',
+                        'Votre Clé de Parrainage',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -101,7 +101,7 @@ class ReferralScreen extends ConsumerWidget {
                                 Clipboard.setData(ClipboardData(text: code));
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Code copié dans le presse-papier !'),
+                                    content: Text('Clé de parrainage copiée !'),
                                     backgroundColor: AppColors.primaryBlue,
                                     duration: Duration(seconds: 2),
                                   ),

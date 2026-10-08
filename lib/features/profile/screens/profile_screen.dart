@@ -152,7 +152,7 @@ class ProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      user?.hasActiveMembership == true ? 'Adhésion Active' : 'Adhésion Non Activée',
+                      user?.hasActiveMembership == true ? '🗝️ Clé Active • Coffre Débloqué' : '🔒 Clé Manquante • Coffre Fermé',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -200,9 +200,9 @@ class ProfileScreen extends ConsumerWidget {
                   if (user?.hasActiveMembership == false) ...[
                     const Divider(height: 1, indent: 56),
                     ListTile(
-                      leading: const Icon(Icons.star_outline, color: AppColors.accentGold),
-                      title: const Text('Payer mon adhésion', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold)),
-                      subtitle: const Text('Accédez aux commissions & retraits', style: TextStyle(fontSize: 12)),
+                      leading: const Icon(Icons.vpn_key_rounded, color: AppColors.accentGold),
+                      title: const Text('Obtenir la Clé du Coffre', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold)),
+                      subtitle: const Text('Activez pour avoir la clé & débloquer vos retraits', style: TextStyle(fontSize: 12)),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                       onTap: () {
                         Navigator.of(context).push(
