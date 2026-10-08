@@ -43,7 +43,7 @@ class ReferralScreen extends ConsumerWidget {
           final code = tree.myReferralCode;
           final link = tree.shareUrl.isNotEmpty
               ? tree.shareUrl
-              : 'https://kobsoncash.com/register?ref=$code';
+              : 'https://cash.kobsontech.com/?ref=$code';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
