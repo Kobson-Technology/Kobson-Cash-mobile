@@ -202,10 +202,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (isRegisterMode) ...[
                     const SizedBox(height: 14),
                     CustomTextField(
-                      label: 'Code de parrainage (Optionnel)',
-                      hintText: 'ex: KOB12345',
+                      label: 'La clef du parrain',
+                      hintText: 'ex: KC-7X8Y9Z (Optionnel)',
                       controller: googleReferralController,
-                      prefixIcon: const Icon(Icons.card_giftcard, color: AppColors.textSecondary),
+                      prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.accentGold),
                     ),
                   ],
 

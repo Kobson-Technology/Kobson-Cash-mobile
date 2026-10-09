@@ -199,6 +199,69 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
+    final refCode = _referralCodeController.text.trim();
+    if (refCode.isEmpty) {
+      final confirmNoSponsor = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.help_outline_rounded, color: AppColors.accentGold, size: 28),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Avez-vous un parrain ?',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Vous n\'avez pas renseigné de clef du parrain.',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Si une personne vous a invité(e) sur Kobson Cash, demandez-lui sa clef de parrain pour rejoindre son équipe.\n\n⚠️ Attention : vous ne pourrez plus ajouter de parrain après la création de votre compte.',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            OutlinedButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.primaryBlue),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('Saisir une clef', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.textSecondary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+              child: const Text('Continuer sans parrain'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmNoSponsor != true) {
+        return;
+      }
+    }
+
     final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
     final formattedPhone = rawPhone.startsWith('+')
         ? rawPhone
@@ -497,10 +560,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           const SizedBox(height: 16),
 
           CustomTextField(
-            label: 'Code de parrainage (Optionnel)',
-            hintText: 'ex: KC-7X8Y9Z',
+            label: 'La clef du parrain',
+            hintText: 'ex: KC-7X8Y9Z (Optionnel)',
             controller: _referralCodeController,
-            prefixIcon: const Icon(Icons.card_giftcard_outlined, color: AppColors.accentGold),
+            prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.accentGold),
           ),
           const SizedBox(height: 16),
 

@@ -9,6 +9,8 @@ import '../../auth/models/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../membership/screens/membership_payment_screen.dart';
+import '../../dashboard/providers/dashboard_provider.dart';
+import '../../referral/providers/referral_provider.dart';
 import 'security_screen.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/services/app_update_service.dart';
@@ -590,9 +592,11 @@ class ProfileScreen extends ConsumerWidget {
       if (!context.mounted) return;
 
       if (success) {
+        ref.invalidate(dashboardProvider);
+        ref.invalidate(questsProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Photo de profil mise à jour avec succès (taille < 500 Ko) !'),
+            content: Text('🎉 Photo de profil enregistrée ! Prime de 50 FCFA créditée sur votre solde !'),
             backgroundColor: AppColors.successGreen,
           ),
         );
