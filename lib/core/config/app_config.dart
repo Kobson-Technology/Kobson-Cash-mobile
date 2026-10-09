@@ -10,7 +10,7 @@ class AppConfig {
   static const String currencySymbol = 'FCFA';
 
   static const String appVersion = '2.0.3';
-  static const int appBuildNumber = 7;
+  static const int appBuildNumber = 10;
   static const String fallbackDownloadUrl =
-      'https://github.com/Kobson-Technology/Kobson-Cash-Versionnage/releases/download/v2.0.3/KobsonCash.apk';
+      'https://github.com/Kobson-Technology/Kobson-Cash-Versionnage/releases/download/2.0.3%2B10/KobsonCash.apk';
 }
