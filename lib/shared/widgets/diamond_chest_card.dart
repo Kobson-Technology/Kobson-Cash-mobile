@@ -210,40 +210,36 @@ class _DiamondChestCardState extends ConsumerState<DiamondChestCard> {
                 ),
                 const SizedBox(height: 14),
 
-                // Commission comparison grid
+                // Commission comparison grid with 3D Diamonds
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white12),
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.3)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Column(
-                        children: [
-                          Text('NIVEAU 1', style: TextStyle(color: Color(0xFF7DD3FC), fontSize: 10, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 2),
-                          Text('7 000 F', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                          Text('(au lieu de 2 200 F)', style: TextStyle(color: Colors.white54, fontSize: 9)),
-                        ],
+                      _buildDiamondLevelCol(
+                        'assets/images/diamant_n1_3d.jpg',
+                        'NIVEAU 1',
+                        '7 000 F',
+                        '(au lieu de 2 200 F)',
                       ),
-                      Column(
-                        children: [
-                          Text('NIVEAU 2', style: TextStyle(color: Color(0xFF7DD3FC), fontSize: 10, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 2),
-                          Text('3 000 F', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                          Text('(au lieu de 900 F)', style: TextStyle(color: Colors.white54, fontSize: 9)),
-                        ],
+                      Container(width: 1, height: 60, color: Colors.white12),
+                      _buildDiamondLevelCol(
+                        'assets/images/diamant_n2_3d.jpg',
+                        'NIVEAU 2',
+                        '3 000 F',
+                        '(au lieu de 900 F)',
                       ),
-                      Column(
-                        children: [
-                          Text('NIVEAU 3', style: TextStyle(color: Color(0xFF7DD3FC), fontSize: 10, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 2),
-                          Text('1 500 F', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                          Text('(au lieu de 500 F)', style: TextStyle(color: Colors.white54, fontSize: 9)),
-                        ],
+                      Container(width: 1, height: 60, color: Colors.white12),
+                      _buildDiamondLevelCol(
+                        'assets/images/diamant_n3_3d.jpg',
+                        'NIVEAU 3',
+                        '1 500 F',
+                        '(au lieu de 500 F)',
                       ),
                     ],
                   ),
@@ -293,4 +289,69 @@ class _DiamondChestCardState extends ConsumerState<DiamondChestCard> {
       ),
     );
   }
+
+  Widget _buildDiamondLevelCol(
+    String imagePath,
+    String levelTitle,
+    String amount,
+    String subtext,
+  ) {
+    return Column(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFF38BDF8).withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.diamond,
+                color: Color(0xFF38BDF8),
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          levelTitle,
+          style: const TextStyle(
+            color: Color(0xFF7DD3FC),
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          amount,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          subtext,
+          style: const TextStyle(color: Colors.white54, fontSize: 9),
+        ),
+      ],
+    );
+  }
 }
+
