@@ -12,5 +12,5 @@ class AppConfig {
   static const String appVersion = '2.0.3';
   static const int appBuildNumber = 10;
   static const String fallbackDownloadUrl =
-      'https://github.com/Kobson-Technology/Kobson-Cash-Versionnage/releases/download/2.0.3%2B10/KobsonCash.apk';
+      'https://github.com/Kobson-Technology/Kobson-Cash-Versionnage/releases/download/2.0.3%2B10/app-release.apk';
 }
