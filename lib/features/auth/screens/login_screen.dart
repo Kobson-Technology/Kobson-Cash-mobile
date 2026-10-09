@@ -78,10 +78,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleGoogleSignIn() async {
     final googleEmailController = TextEditingController();
     final googlePasswordController = TextEditingController();
-    final googleFirstNameController = TextEditingController();
-    final googleLastNameController = TextEditingController();
-    final googleReferralController = TextEditingController();
-    bool isRegisterMode = false;
     bool obscureGooglePassword = true;
     String? localError;
 
@@ -116,61 +112,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
+                  const Row(
                     children: [
-                      const CustomPaint(
+                      CustomPaint(
                         size: Size(26, 26),
                         painter: GoogleLogoPainter(),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          isRegisterMode ? 'Inscription via Google' : 'Connexion via Google',
-                          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          'Connexion via Google',
+                          style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    isRegisterMode
-                        ? 'Créez votre compte Kobson Cash associé à Google en définissant votre mot de passe secret.'
-                        : 'Accédez à votre compte Google. Votre mot de passe secret est requis pour accéder à vos fonds.',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
+                  const Text(
+                    'Accédez à votre compte Google enregistré. Votre mot de passe secret est requis pour accéder à vos fonds.',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
                   ),
                   const SizedBox(height: 18),
 
                   if (localError != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppColors.errorRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
                       ),
-                      child: Text(localError!, style: const TextStyle(color: AppColors.errorRed, fontSize: 13)),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
-
-                  if (isRegisterMode) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextField(
-                            label: 'Prénom',
-                            hintText: 'ex: Kouamé',
-                            controller: googleFirstNameController,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(localError!, style: const TextStyle(color: AppColors.errorRed, fontSize: 13, height: 1.3)),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              );
+                            },
+                            child: const Text(
+                              '👉 Ouvrir le formulaire d\'inscription officiel',
+                              style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: CustomTextField(
-                            label: 'Nom',
-                            hintText: 'ex: Jean',
-                            controller: googleLastNameController,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 14),
                   ],
@@ -185,7 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 14),
 
                   CustomTextField(
-                    label: isRegisterMode ? 'Définir un Mot de passe' : 'Mot de passe Kobson Cash',
+                    label: 'Mot de passe secret Kobson Cash',
                     hintText: '••••••••',
                     controller: googlePasswordController,
                     obscureText: obscureGooglePassword,
@@ -199,19 +189,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
 
-                  if (isRegisterMode) ...[
-                    const SizedBox(height: 14),
-                    CustomTextField(
-                      label: 'La clef du parrain',
-                      hintText: 'ex: KC-7X8Y9Z (Optionnel)',
-                      controller: googleReferralController,
-                      prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.accentGold),
-                    ),
-                  ],
-
                   const SizedBox(height: 22),
                   CustomButton(
-                    text: isRegisterMode ? 'Créer mon compte Google' : 'Déverrouiller l\'accès',
+                    text: 'Déverrouiller l\'accès',
                     isLoading: _isGoogleLoading,
                     onPressed: () async {
                       final email = googleEmailController.text.trim();
@@ -232,10 +212,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       final navigator = Navigator.of(context);
                       final success = await ref.read(authProvider.notifier).googleAuth(
                             email: email,
-                            firstName: isRegisterMode ? googleFirstNameController.text.trim() : '',
-                            lastName: isRegisterMode ? googleLastNameController.text.trim() : '',
+                            firstName: '',
+                            lastName: '',
                             password: pass,
-                            referralCode: isRegisterMode ? googleReferralController.text.trim() : null,
+                            referralCode: null,
                           );
 
                       if (!mounted) return;
@@ -255,21 +235,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       }
                     },
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   Center(
-                    child: TextButton(
-                      onPressed: () {
-                        setSheetState(() {
-                          isRegisterMode = !isRegisterMode;
-                          localError = null;
-                        });
-                      },
-                      child: Text(
-                        isRegisterMode
-                            ? 'Déjà inscrit ? Se connecter avec Google'
-                            : 'Nouveau compte Google ? S\'inscrire ici',
-                        style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
-                      ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Pas encore de compte ?',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                        const SizedBox(height: 4),
+                        TextButton.icon(
+                          icon: const Icon(Icons.person_add_outlined, size: 18, color: AppColors.primaryBlue),
+                          label: const Text(
+                            'S\'inscrire via le formulaire officiel',
+                            style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+                          ),
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -192,88 +192,60 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Veuillez accepter les conditions générales.'),
+          content: Text('Veuillez accepter les conditions d\'utilisation.'),
           backgroundColor: AppColors.errorRed,
         ),
       );
       return;
     }
 
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final email = _emailController.text.trim();
     final refCode = _referralCodeController.text.trim();
-    if (refCode.isEmpty) {
-      final confirmNoSponsor = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: const [
-              Icon(Icons.help_outline_rounded, color: AppColors.accentGold, size: 28),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Avez-vous un parrain ?',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Vous n\'avez pas renseigné de clef du parrain.',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Si une personne vous a invité(e) sur Kobson Cash, demandez-lui sa clef de parrain pour rejoindre son équipe.\n\n⚠️ Attention : vous ne pourrez plus ajouter de parrain après la création de votre compte.',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
-              ),
-            ],
-          ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          actions: [
-            OutlinedButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.primaryBlue),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('Saisir une clef', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.textSecondary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                elevation: 0,
-              ),
-              child: const Text('Continuer sans parrain'),
-            ),
-          ],
+
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez renseigner votre nom, prénom et adresse email.'),
+          backgroundColor: AppColors.errorRed,
         ),
       );
+      return;
+    }
 
-      if (confirmNoSponsor != true) {
-        return;
-      }
+    if (refCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La clef du parrain est strictement obligatoire pour créer votre compte.'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+      return;
     }
 
     final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
+    if (rawPhone.isEmpty || rawPhone.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez renseigner un numéro de téléphone Mobile Money valide.'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+      return;
+    }
+
     final formattedPhone = rawPhone.startsWith('+')
         ? rawPhone
         : '${_selectedCountry.code}${rawPhone.replaceFirst(RegExp(r'^0+'), '')}';
 
     final success = await ref.read(authProvider.notifier).register(
-          firstName: _firstNameController.text.trim().isEmpty ? 'Adhérent' : _firstNameController.text.trim(),
-          lastName: _lastNameController.text.trim().isEmpty ? 'Google' : _lastNameController.text.trim(),
-          email: _emailController.text.trim(),
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
           phoneNumber: formattedPhone,
           password: _passwordController.text,
-          referralCode: _referralCodeController.text.trim().isEmpty ? null : _referralCodeController.text.trim(),
+          referralCode: refCode,
         );
 
     if (success && mounted) {
@@ -388,6 +360,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           isLoading: _isGoogleSelecting,
           onPressed: _handleGoogleSelection,
         ),
+        const SizedBox(height: 12),
+
+        OutlinedButton(
+          onPressed: () => setState(() => _currentStep = 1),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            side: const BorderSide(color: AppColors.primaryBlue),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: const Text(
+            'Remplir le formulaire directement',
+            style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+        ),
         const SizedBox(height: 24),
 
         Row(
@@ -457,64 +443,68 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Badge du compte Google associé
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFBBF7D0)),
-            ),
-            child: Row(
-              children: [
-                const CustomPaint(
-                  size: Size(24, 24),
-                  painter: GoogleLogoPainter(),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            '${_firstNameController.text} ${_lastNameController.text}'.trim(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Color(0xFF166534),
+          // Badge du compte Google associé si renseigné
+          if (_emailController.text.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFBBF7D0)),
+              ),
+              child: Row(
+                children: [
+                  const CustomPaint(
+                    size: Size(24, 24),
+                    painter: GoogleLogoPainter(),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '${_firstNameController.text} ${_lastNameController.text}'.trim().isNotEmpty
+                                  ? '${_firstNameController.text} ${_lastNameController.text}'.trim()
+                                  : 'Compte Google associé',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Color(0xFF166534),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 16),
-                        ],
-                      ),
-                      Text(
-                        _emailController.text,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF15803D),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 16),
+                          ],
                         ),
-                      ),
-                    ],
+                        Text(
+                          _emailController.text,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF15803D),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () => setState(() => _currentStep = 0),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  TextButton(
+                    onPressed: () => setState(() => _currentStep = 0),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    child: const Text('Changer', style: TextStyle(color: Color(0xFF15803D), fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
-                  child: const Text('Changer', style: TextStyle(color: Color(0xFF15803D), fontWeight: FontWeight.bold, fontSize: 12)),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
+          ],
 
           const Text(
-            'Informations complémentaires',
+            'Informations personnelles obligatoires',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -523,7 +513,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Renseignez votre numéro Mobile Money pour recevoir vos paiements et créez votre mot de passe secret.',
+            'Tous les champs ci-dessous sont strictement obligatoires pour valider votre inscription.',
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 20),
@@ -552,6 +542,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             const SizedBox(height: 16),
           ],
 
+          Row(
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  label: 'Prénom *',
+                  hintText: 'ex: Kouamé',
+                  controller: _firstNameController,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Le prénom est obligatoire' : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CustomTextField(
+                  label: 'Nom *',
+                  hintText: 'ex: Konan',
+                  controller: _lastNameController,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Le nom est obligatoire' : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (_emailController.text.isEmpty) ...[
+            CustomTextField(
+              label: 'Adresse Email *',
+              hintText: 'ex: votre.compte@gmail.com',
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
+              validator: (v) => (v == null || v.trim().isEmpty || !v.contains('@')) ? 'Adresse email valide obligatoire' : null,
+            ),
+            const SizedBox(height: 16),
+          ],
+
           CountryPhoneInput(
             selectedCountry: _selectedCountry,
             onCountryChanged: (c) => setState(() => _selectedCountry = c),
@@ -560,10 +585,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           const SizedBox(height: 16),
 
           CustomTextField(
-            label: 'La clef du parrain',
-            hintText: 'ex: KC-7X8Y9Z (Optionnel)',
+            label: 'La clef du parrain *',
+            hintText: 'ex: KC-7X8Y9Z (Obligatoire)',
             controller: _referralCodeController,
             prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.accentGold),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'La clef du parrain est obligatoire';
+              return null;
+            },
           ),
           const SizedBox(height: 16),
 
