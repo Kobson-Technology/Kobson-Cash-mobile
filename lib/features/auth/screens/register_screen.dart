@@ -214,10 +214,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    if (refCode.isEmpty) {
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La clef du parrain est strictement obligatoire pour créer votre compte.'),
+          content: Text('Veuillez renseigner votre nom, prénom et adresse email.'),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -245,7 +245,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           email: email,
           phoneNumber: formattedPhone,
           password: _passwordController.text,
-          referralCode: refCode,
+          referralCode: refCode.isNotEmpty ? refCode : null,
         );
 
     if (success && mounted) {
@@ -585,14 +585,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           const SizedBox(height: 16),
 
           CustomTextField(
-            label: 'La clef du parrain *',
-            hintText: 'ex: KC-7X8Y9Z (Obligatoire)',
+            label: 'La clef du parrain (Optionnel)',
+            hintText: 'ex: KC-7X8Y9Z (Laisser vide si aucun parrain)',
             controller: _referralCodeController,
             prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.accentGold),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'La clef du parrain est obligatoire';
-              return null;
-            },
+          ),
+          const SizedBox(height: 6),
+          const Padding(
+            padding: EdgeInsets.only(left: 4),
+            child: Text(
+              '💡 Si vous n\'avez pas de parrain, laissez ce champ vide. Vous serez automatiquement rattaché au compte officiel de Kobson Cash.',
+              style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
+            ),
           ),
           const SizedBox(height: 16),
 
