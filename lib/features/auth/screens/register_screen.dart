@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/country_phone_input.dart';
 import '../../../shared/widgets/google_sign_in_button.dart';
 import '../providers/auth_provider.dart';
 import '../../dashboard/screens/main_shell.dart';
@@ -32,6 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = true;
   final bool _isGoogleSelecting = false;
+  CountryDialCode _selectedCountry = kSupportedCountries[0];
 
   @override
   void initState() {
@@ -197,11 +199,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
+    final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
+    final formattedPhone = rawPhone.startsWith('+')
+        ? rawPhone
+        : '${_selectedCountry.code}${rawPhone.replaceFirst(RegExp(r'^0+'), '')}';
+
     final success = await ref.read(authProvider.notifier).register(
           firstName: _firstNameController.text.trim().isEmpty ? 'Adhérent' : _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim().isEmpty ? 'Google' : _lastNameController.text.trim(),
           email: _emailController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
+          phoneNumber: formattedPhone,
           password: _passwordController.text,
           referralCode: _referralCodeController.text.trim().isEmpty ? null : _referralCodeController.text.trim(),
         );
@@ -482,17 +489,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             const SizedBox(height: 16),
           ],
 
-          CustomTextField(
-            label: 'Numéro de téléphone (Mobile Money)',
-            hintText: 'ex: 0701020304 ou +2250701020304',
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Veuillez saisir votre numéro Mobile Money';
-              if (v.trim().length < 8) return 'Numéro de téléphone incomplet';
-              return null;
-            },
+          CountryPhoneInput(
+            selectedCountry: _selectedCountry,
+            onCountryChanged: (c) => setState(() => _selectedCountry = c),
+            phoneController: _phoneController,
           ),
           const SizedBox(height: 16),
 
