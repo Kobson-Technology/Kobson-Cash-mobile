@@ -8,6 +8,7 @@ import '../../../shared/widgets/animated_glowing_chest.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
+import '../../../shared/widgets/operator_brand_logo.dart';
 
 class MembershipPaymentScreen extends ConsumerStatefulWidget {
   const MembershipPaymentScreen({super.key});
@@ -292,6 +293,47 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // Supported Mobile Money Operators Banner
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.payment_rounded, size: 16, color: AppColors.primaryBlue),
+                          SizedBox(width: 8),
+                          Text(
+                            'Paiement & Retrait par Mobile Money',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildOperatorBadge('wave', 'Wave'),
+                          _buildOperatorBadge('orange', 'Orange'),
+                          _buildOperatorBadge('mtn', 'MTN'),
+                          _buildOperatorBadge('moov', 'Moov'),
+                          _buildOperatorBadge('djamo', 'Djamo'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 24),
 
                 // Benefits
@@ -421,6 +463,24 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOperatorBadge(String brandKey, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OperatorBrandLogo(operatorKey: brandKey, size: 36),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }
