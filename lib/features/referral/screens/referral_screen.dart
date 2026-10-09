@@ -9,6 +9,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/referral_provider.dart';
 import 'my_team_screen.dart';
+import '../../membership/screens/membership_payment_screen.dart';
 
 class ReferralScreen extends ConsumerWidget {
   const ReferralScreen({super.key});
@@ -41,112 +42,170 @@ class ReferralScreen extends ConsumerWidget {
         error: (err, _) => Center(child: Text('Erreur: $err')),
         data: (tree) {
           final code = tree.myReferralCode;
-          final link = 'https://cash.kobsontech.com/register?ref=$code';
+          final isLocked = code.isEmpty;
+          final link = isLocked ? '' : 'https://cash.kobsontech.com/register?ref=$code';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // QR Code and Code Box
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                if (isLocked) ...[
+                  // Locked state card
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.amber.shade300, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.amber.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.lock_rounded, size: 48, color: Colors.amber.shade800),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Clé de Parrainage Verrouillée',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Votre clé de parrainage et vos commissions sont inactives. Activez votre Coffre pour débloquer votre clé unique et commencer à percevoir vos commissions sur 3 niveaux !',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                        ),
+                        const SizedBox(height: 20),
+                        CustomButton(
+                          text: 'Activer mon Coffre (4 500 FCFA)',
+                          icon: Icons.vpn_key_rounded,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Votre Clé de Parrainage',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                  const SizedBox(height: 24),
+                ] else ...[
+                  // QR Code and Code Box
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Votre Clé de Parrainage',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              code,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                                color: AppColors.primaryBlue,
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                code,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                  color: AppColors.primaryBlue,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            IconButton(
-                              icon: const Icon(Icons.copy, color: AppColors.primaryBlue, size: 20),
-                              onPressed: () {
-                                Clipboard.setData(ClipboardData(text: code));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Clé de parrainage copiée !'),
-                                    backgroundColor: AppColors.primaryBlue,
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              IconButton(
+                                icon: const Icon(Icons.copy, color: AppColors.primaryBlue, size: 20),
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: code));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Clé de parrainage copiée !'),
+                                      backgroundColor: AppColors.primaryBlue,
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: QrImageView(
+                            data: link,
+                            version: QrVersions.auto,
+                            size: 160.0,
+                          ),
                         ),
-                        child: QrImageView(
-                          data: link,
-                          version: QrVersions.auto,
-                          size: 160.0,
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Faites scanner ce QR Code ou partagez votre lien pour parrainer un proche.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Faites scanner ce QR Code ou partagez votre lien pour parrainer un proche.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // Share Buttons
-                CustomButton(
-                  text: 'Partager mon lien d’invitation',
-                  icon: Icons.share_rounded,
-                  onPressed: () {
-                    SharePlus.instance.share(
-                      ShareParams(
-                        text: 'Rejoins Kobson Cash et génère des revenus d’affiliation fiables et sécurisés ! Mon code : $code. Inscris-toi ici : $link',
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
+                  // Share Buttons
+                  CustomButton(
+                    text: 'Partager mon lien d’invitation',
+                    icon: Icons.share_rounded,
+                    onPressed: () {
+                      SharePlus.instance.share(
+                        ShareParams(
+                          text: 'Rejoins Kobson Cash et génère des revenus d’affiliation fiables et sécurisés ! Mon code : $code. Inscris-toi ici : $link',
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                ],
 
                 // 3 Levels Commission Plan Info
                 configAsync.when(

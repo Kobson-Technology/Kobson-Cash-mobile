@@ -143,8 +143,11 @@ class _QuestBoardWidgetState extends ConsumerState<QuestBoardWidget> {
         if (quests.isEmpty) return const SizedBox.shrink();
 
         final starQuest = quests.firstWhere(
-          (q) => q.code == 'QUEST_N1_5',
-          orElse: () => quests.first,
+          (q) => q.isCompleted,
+          orElse: () => quests.firstWhere(
+            (q) => q.isInProgress,
+            orElse: () => quests.first,
+          ),
         );
 
         final otherQuests = quests.where((q) => q.code != starQuest.code).toList();
@@ -305,7 +308,9 @@ class _QuestBoardWidgetState extends ConsumerState<QuestBoardWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Progression : ${quest.currentProgress} / ${quest.targetThreshold} filleuls',
+                quest.type == 5
+                    ? 'Progression : ${quest.currentProgress == 1 ? "100%" : "Profil incomplet"}'
+                    : 'Progression : ${quest.currentProgress} / ${quest.targetThreshold}',
                 style: const TextStyle(color: Colors.white60, fontSize: 11),
               ),
               Text(
@@ -342,14 +347,14 @@ class _QuestBoardWidgetState extends ConsumerState<QuestBoardWidget> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFF34D399).withValues(alpha: 0.5)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded, color: Color(0xFF34D399), size: 16),
-                  SizedBox(width: 6),
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF34D399), size: 16),
+                  const SizedBox(width: 6),
                   Text(
-                    'Prime de +500 FCFA Déjà Encaissée',
-                    style: TextStyle(
+                    'Prime de +${Formatters.formatCurrency(quest.rewardAmount)} Déjà Encaissée',
+                    style: const TextStyle(
                       color: Color(0xFF6EE7B7),
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -376,14 +381,14 @@ class _QuestBoardWidgetState extends ConsumerState<QuestBoardWidget> {
                         height: 20,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
+                          const Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 20),
+                          const SizedBox(width: 8),
                           Text(
-                            'Réclamer mes 500 FCFA !',
-                            style: TextStyle(
+                            'Réclamer mes ${Formatters.formatCurrency(quest.rewardAmount)} !',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -400,7 +405,11 @@ class _QuestBoardWidgetState extends ConsumerState<QuestBoardWidget> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Parrainez encore ${quest.targetThreshold - quest.currentProgress} filleul(s) actif(s) pour débloquer votre prime cash.',
+                    quest.type == 5
+                        ? 'Ajoutez votre photo dans votre profil pour débloquer vos 50 FCFA.'
+                        : (quest.type == 6 || quest.type == 7)
+                            ? 'Activez votre coffre pour débloquer vos ${Formatters.formatCurrency(quest.rewardAmount)}.'
+                            : 'Parrainez encore ${quest.targetThreshold - quest.currentProgress} membre(s) actif(s) pour débloquer votre prime cash.',
                     style: const TextStyle(color: Colors.white54, fontSize: 11),
                   ),
                 ),

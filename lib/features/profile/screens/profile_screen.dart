@@ -182,20 +182,32 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const Divider(height: 1, indent: 56),
                   ListTile(
-                    leading: const Icon(Icons.card_giftcard_outlined, color: AppColors.accentGold),
-                    title: const Text('Code de parrainage personnel', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                    subtitle: Text(user?.referralCode ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryBlue)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.copy, size: 20, color: AppColors.primaryBlue),
-                      onPressed: () {
-                        if (user?.referralCode != null) {
-                          Clipboard.setData(ClipboardData(text: user!.referralCode));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Code de parrainage copié !')),
-                          );
-                        }
-                      },
+                    leading: Icon(
+                      user?.hasActiveMembership == true ? Icons.card_giftcard_outlined : Icons.lock_outline,
+                      color: user?.hasActiveMembership == true ? AppColors.accentGold : Colors.grey,
                     ),
+                    title: const Text('Code de parrainage personnel', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    subtitle: Text(
+                      user?.hasActiveMembership == true && (user?.referralCode.isNotEmpty ?? false)
+                          ? user!.referralCode
+                          : 'Verrouillé (Clé manquante)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: user?.hasActiveMembership == true ? AppColors.primaryBlue : Colors.grey.shade600,
+                      ),
+                    ),
+                    trailing: user?.hasActiveMembership == true && (user?.referralCode.isNotEmpty ?? false)
+                        ? IconButton(
+                            icon: const Icon(Icons.copy, size: 20, color: AppColors.primaryBlue),
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: user!.referralCode));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Code de parrainage copié !')),
+                              );
+                            },
+                          )
+                        : null,
                   ),
                   if (user?.hasActiveMembership == false) ...[
                     const Divider(height: 1, indent: 56),

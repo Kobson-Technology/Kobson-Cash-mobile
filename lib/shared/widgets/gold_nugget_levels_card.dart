@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/services/sound_service.dart';
 import '../../core/utils/formatters.dart';
+import '../../features/membership/screens/membership_payment_screen.dart';
 import '../../features/referral/models/referral_models.dart';
 
 class GoldNuggetLevelsCard extends StatefulWidget {
@@ -554,16 +555,27 @@ class GoldLevelDetailSheet extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).pop();
-                SharePlus.instance.share(
-                  ShareParams(
-                    text: 'Rejoins mon équipe sur Kobson Cash et active ton Coffre pour générer des gains quotidiens par Mobile Money !\nLien d\'inscription : $shareUrl',
-                  ),
-                );
+                if (shareUrl.isEmpty || referralCode.isEmpty) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
+                  );
+                } else {
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: 'Rejoins mon équipe sur Kobson Cash et active ton Coffre pour générer des gains quotidiens par Mobile Money !\nLien d\'inscription : $shareUrl',
+                    ),
+                  );
+                }
               },
-              icon: const Icon(Icons.share_rounded, color: Colors.black),
-              label: const Text(
-                'Partager mon lien de parrainage',
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              icon: Icon(
+                shareUrl.isEmpty || referralCode.isEmpty ? Icons.vpn_key_rounded : Icons.share_rounded,
+                color: Colors.black,
+              ),
+              label: Text(
+                shareUrl.isEmpty || referralCode.isEmpty
+                    ? 'Activer mon Coffre pour parrainer'
+                    : 'Partager mon lien de parrainage',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFD700),
