@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/gold_nugget_levels_card.dart';
+import '../../../shared/widgets/quest_board_widget.dart';
+import '../../../shared/widgets/diamond_chest_card.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../models/referral_models.dart';
 import '../providers/referral_provider.dart';
@@ -54,6 +56,15 @@ class MyTeamScreen extends ConsumerWidget {
                   loading: () => const SizedBox.shrink(),
                   error: (_, _) => const SizedBox.shrink(),
                 ),
+
+                // Carte Clé Diamant Supérieure (VIP)
+                const DiamondChestCard(
+                  hasActiveGoldChest: true,
+                  hasActiveDiamondChest: false,
+                ),
+
+                // Section Quêtes & Primes Cash (dont 5 Filleuls N1 = +500 FCFA)
+                const QuestBoardWidget(),
 
                 // Top Level Breakdown Cards
                 Row(

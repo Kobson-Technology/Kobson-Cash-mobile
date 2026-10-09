@@ -15,6 +15,8 @@ import '../../withdrawals/screens/withdrawal_screen.dart';
 import '../providers/dashboard_provider.dart';
 import '../../referral/providers/referral_provider.dart';
 import '../../../shared/widgets/gold_nugget_levels_card.dart';
+import '../../../shared/widgets/quest_board_widget.dart';
+import '../../../shared/widgets/diamond_chest_card.dart';
 import '../../../core/services/app_update_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -395,6 +397,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           loading: () => const SizedBox.shrink(),
                           error: (_, _) => const SizedBox.shrink(),
                         ),
+
+                        // Carte Clé Diamant Supérieure (VIP)
+                        DiamondChestCard(
+                          hasActiveGoldChest: dash.hasActiveMembership,
+                          hasActiveDiamondChest: false,
+                        ),
+
+                        // Section Quêtes & Primes Cash (Ex: 5 Filleuls N1 = +500 FCFA)
+                        const QuestBoardWidget(),
 
                         // Recent Transactions
                         Row(
