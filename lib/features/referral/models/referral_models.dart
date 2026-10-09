@@ -61,3 +61,107 @@ class ReferralTreeModel {
     );
   }
 }
+
+class LevelQuestTaskModel {
+  final String id;
+  final String title;
+  final String description;
+  final bool isCompleted;
+  final int currentProgress;
+  final int targetProgress;
+
+  LevelQuestTaskModel({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.isCompleted,
+    required this.currentProgress,
+    required this.targetProgress,
+  });
+
+  factory LevelQuestTaskModel.fromJson(Map<String, dynamic> json) {
+    return LevelQuestTaskModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      isCompleted: json['isCompleted'] == true,
+      currentProgress: (json['currentProgress'] as num?)?.toInt() ?? 0,
+      targetProgress: (json['targetProgress'] as num?)?.toInt() ?? 1,
+    );
+  }
+}
+
+class LevelTierModel {
+  final int level;
+  final String title;
+  final String honorificTitle;
+  final double commissionAmount;
+  final bool isUnlocked;
+  final String assetPath;
+  final double pendingLockedAmount;
+  final List<LevelQuestTaskModel> tasks;
+
+  LevelTierModel({
+    required this.level,
+    required this.title,
+    required this.honorificTitle,
+    required this.commissionAmount,
+    required this.isUnlocked,
+    required this.assetPath,
+    required this.pendingLockedAmount,
+    required this.tasks,
+  });
+
+  factory LevelTierModel.fromJson(Map<String, dynamic> json) {
+    var rawTasks = json['tasks'] as List<dynamic>? ?? [];
+    return LevelTierModel(
+      level: (json['level'] as num?)?.toInt() ?? 1,
+      title: json['title']?.toString() ?? '',
+      honorificTitle: json['honorificTitle']?.toString() ?? '',
+      commissionAmount: (json['commissionAmount'] as num?)?.toDouble() ?? 0.0,
+      isUnlocked: json['isUnlocked'] == true,
+      assetPath: json['assetPath']?.toString() ?? 'assets/images/pepite_or_n1.jpg',
+      pendingLockedAmount: (json['pendingLockedAmount'] as num?)?.toDouble() ?? 0.0,
+      tasks: rawTasks.map((t) => LevelQuestTaskModel.fromJson(t as Map<String, dynamic>)).toList(),
+    );
+  }
+}
+
+class LevelProgressionModel {
+  final int currentUnlockedLevel;
+  final int activeDirectReferrals;
+  final int activeLevel2Referrals;
+  final int activeTotalTeam;
+  final double totalGoldEarned;
+  final double totalGoldPending;
+  final LevelTierModel level1;
+  final LevelTierModel level2;
+  final LevelTierModel level3;
+
+  LevelProgressionModel({
+    required this.currentUnlockedLevel,
+    required this.activeDirectReferrals,
+    required this.activeLevel2Referrals,
+    required this.activeTotalTeam,
+    required this.totalGoldEarned,
+    required this.totalGoldPending,
+    required this.level1,
+    required this.level2,
+    required this.level3,
+  });
+
+  factory LevelProgressionModel.fromJson(Map<String, dynamic> json) {
+    return LevelProgressionModel(
+      currentUnlockedLevel: (json['currentUnlockedLevel'] as num?)?.toInt() ?? 0,
+      activeDirectReferrals: (json['activeDirectReferrals'] as num?)?.toInt() ?? 0,
+      activeLevel2Referrals: (json['activeLevel2Referrals'] as num?)?.toInt() ?? 0,
+      activeTotalTeam: (json['activeTotalTeam'] as num?)?.toInt() ?? 0,
+      totalGoldEarned: (json['totalGoldEarned'] as num?)?.toDouble() ?? 0.0,
+      totalGoldPending: (json['totalGoldPending'] as num?)?.toDouble() ?? 0.0,
+      level1: LevelTierModel.fromJson(json['level1'] as Map<String, dynamic>? ?? {}),
+      level2: LevelTierModel.fromJson(json['level2'] as Map<String, dynamic>? ?? {}),
+      level3: LevelTierModel.fromJson(json['level3'] as Map<String, dynamic>? ?? {}),
+    );
+  }
+}
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/gold_nugget_levels_card.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../models/referral_models.dart';
 import '../providers/referral_provider.dart';
@@ -12,18 +13,22 @@ class MyTeamScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final treeAsync = ref.watch(referralTreeProvider);
+    final levelsAsync = ref.watch(levelProgressionProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text('Mon Équipe'),
+        title: const Text('Mon Équipe & Pépites 3D'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(referralTreeProvider),
+            onPressed: () {
+              ref.invalidate(referralTreeProvider);
+              ref.invalidate(levelProgressionProvider);
+            },
           ),
         ],
       ),
@@ -36,6 +41,20 @@ class MyTeamScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Section 3D Gold Nuggets Progression
+                levelsAsync.when(
+                  data: (prog) => Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: GoldNuggetLevelsCard(
+                      progression: prog,
+                      referralCode: tree.myReferralCode,
+                      shareUrl: tree.shareUrl,
+                    ),
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                ),
+
                 // Top Level Breakdown Cards
                 Row(
                   children: [

@@ -13,6 +13,8 @@ import '../../referral/screens/referral_screen.dart';
 import '../../wallet/screens/transactions_screen.dart';
 import '../../withdrawals/screens/withdrawal_screen.dart';
 import '../providers/dashboard_provider.dart';
+import '../../referral/providers/referral_provider.dart';
+import '../../../shared/widgets/gold_nugget_levels_card.dart';
 import '../../../core/services/app_update_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -37,6 +39,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final dashboardAsync = ref.watch(dashboardProvider);
+    final levelsAsync = ref.watch(levelProgressionProvider);
 
     final user = authState.user;
 
@@ -46,6 +49,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(dashboardProvider);
+            ref.invalidate(levelProgressionProvider);
             await ref.read(authProvider.notifier).checkAuthStatus();
           },
           child: SingleChildScrollView(
@@ -376,7 +380,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
+
+                        // Section Pépites d'Or 3D & Niveaux de Commissions
+                        levelsAsync.when(
+                          data: (prog) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: GoldNuggetLevelsCard(
+                              progression: prog,
+                              referralCode: dash.referralCode,
+                              shareUrl: dash.referralLink,
+                            ),
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, _) => const SizedBox.shrink(),
+                        ),
 
                         // Recent Transactions
                         Row(
