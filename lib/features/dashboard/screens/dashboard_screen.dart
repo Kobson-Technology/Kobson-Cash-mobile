@@ -17,6 +17,7 @@ import '../../referral/providers/referral_provider.dart';
 import '../../../shared/widgets/gold_nugget_levels_card.dart';
 import '../../../shared/widgets/quest_board_widget.dart';
 import '../../../shared/widgets/diamond_chest_card.dart';
+import '../../../shared/widgets/quests_sheet.dart';
 import '../../../core/services/app_update_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
+      floatingActionButton: const QuestsFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
