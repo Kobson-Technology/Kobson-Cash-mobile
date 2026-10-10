@@ -464,49 +464,56 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               itemCount: dash.recentTransactions.take(4).length,
                               separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
                               itemBuilder: (context, index) {
-                                final tx = dash.recentTransactions[index];
-                                // type peut être un entier ('2') ou un nom ('referralcommission')
-                                final t = tx.type.trim().toLowerCase();
-                                final isCredit = t == '2' || t == '10' ||
-                                    t.contains('commission') || t.contains('questbonus') ||
-                                    t == '5' || t.contains('release') || t == '6' || t.contains('refund');
-                                final isHold = t == '4' || t.contains('hold');
+                                try {
+                                  final tx = dash.recentTransactions[index];
+                                  // type peut être un entier ('2') ou un nom ('referralcommission')
+                                  final t = tx.type.trim().toLowerCase();
+                                  final isCredit = t == '2' || t == '10' ||
+                                      t.contains('commission') || t.contains('questbonus') ||
+                                      t == '5' || t.contains('release') || t == '6' || t.contains('refund');
+                                  final isHold = t == '4' || t.contains('hold');
 
-                                return ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: isHold
-                                        ? AppColors.accentGold.withValues(alpha: 0.12)
-                                        : (isCredit ? AppColors.successGreen.withValues(alpha: 0.12) : AppColors.errorRed.withValues(alpha: 0.12)),
-                                    child: Icon(
-                                      isHold
-                                          ? Icons.lock_clock
-                                          : (isCredit ? Icons.arrow_downward : Icons.arrow_upward),
-                                      size: 16,
-                                      color: isHold
-                                          ? AppColors.accentGold
-                                          : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: isHold
+                                          ? AppColors.accentGold.withValues(alpha: 0.12)
+                                          : (isCredit ? AppColors.successGreen.withValues(alpha: 0.12) : AppColors.errorRed.withValues(alpha: 0.12)),
+                                      child: Icon(
+                                        isHold
+                                            ? Icons.lock_clock
+                                            : (isCredit ? Icons.arrow_downward : Icons.arrow_upward),
+                                        size: 16,
+                                        color: isHold
+                                            ? AppColors.accentGold
+                                            : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                                      ),
                                     ),
-                                  ),
-                                  title: Text(
-                                    Formatters.formatTransactionType(tx.type),
-                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                                  ),
-                                  subtitle: Text(
-                                    Formatters.formatDateTime(tx.createdAt),
-                                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                  ),
-                                  trailing: Text(
-                                    '${isCredit ? "+" : (isHold ? "" : "-")}${Formatters.formatCurrency(tx.amount)}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      color: isHold
-                                          ? AppColors.accentGold
-                                          : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                                    title: Text(
+                                      Formatters.formatTransactionType(tx.type),
+                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                     ),
-                                  ),
-                                );
+                                    subtitle: Text(
+                                      Formatters.formatDateTime(tx.createdAt),
+                                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                    ),
+                                    trailing: Text(
+                                      '${isCredit ? "+" : (isHold ? "" : "-")}${Formatters.formatCurrency(tx.amount)}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: isHold
+                                            ? AppColors.accentGold
+                                            : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                                      ),
+                                    ),
+                                  );
+                                } catch (_) {
+                                  return const ListTile(
+                                    leading: Icon(Icons.receipt_long, color: AppColors.textSecondary),
+                                    title: Text('Transaction', style: TextStyle(color: AppColors.textSecondary)),
+                                  );
+                                }
                               },
                             ),
                           ),

@@ -213,55 +213,67 @@ class WalletScreen extends ConsumerWidget {
                       itemCount: displayList.length,
                       separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
                       itemBuilder: (context, index) {
-                        final tx = displayList[index];
-                        final isCredit = tx.type.toLowerCase().contains('commission');
-                        final isHold = tx.type.toLowerCase().contains('hold');
+                        try {
+                          final tx = displayList[index];
+                          final t = tx.type.trim().toLowerCase();
+                          final isCredit = t == '2' || t == '10' ||
+                              t.contains('commission') || t.contains('questbonus') ||
+                              t == '5' || t.contains('release') || t == '6' || t.contains('refund');
+                          final isHold = t == '4' || t.contains('hold');
 
-                        return ListTile(
-                          leading: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: isHold
-                                ? AppColors.accentGold.withValues(alpha: 0.12)
-                                : (isCredit ? AppColors.successGreen.withValues(alpha: 0.12) : AppColors.errorRed.withValues(alpha: 0.12)),
-                            child: Icon(
-                              isHold
-                                  ? Icons.lock_clock_outlined
-                                  : (isCredit ? Icons.arrow_downward : Icons.arrow_upward),
-                              size: 18,
-                              color: isHold
-                                  ? AppColors.accentGold
-                                  : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                          return ListTile(
+                            leading: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: isHold
+                                  ? AppColors.accentGold.withValues(alpha: 0.12)
+                                  : (isCredit ? AppColors.successGreen.withValues(alpha: 0.12) : AppColors.errorRed.withValues(alpha: 0.12)),
+                              child: Icon(
+                                isHold
+                                    ? Icons.lock_clock_outlined
+                                    : (isCredit ? Icons.arrow_downward : Icons.arrow_upward),
+                                size: 18,
+                                color: isHold
+                                    ? AppColors.accentGold
+                                    : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                              ),
                             ),
-                          ),
-                          title: Text(
-                            Formatters.formatTransactionType(tx.type),
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                          subtitle: Text(
-                            Formatters.formatDateTime(tx.createdAt),
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                          ),
-                          trailing: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${isCredit ? "+" : (isHold ? "" : "-")}${Formatters.formatCurrency(tx.amount)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: isHold
-                                      ? AppColors.accentGold
-                                      : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                            title: Text(
+                              Formatters.formatTransactionType(tx.type),
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                            subtitle: Text(
+                              Formatters.formatDateTime(tx.createdAt),
+                              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${isCredit ? "+" : (isHold ? "" : "-")}${Formatters.formatCurrency(tx.amount)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: isHold
+                                        ? AppColors.accentGold
+                                        : (isCredit ? AppColors.successGreen : AppColors.errorRed),
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                tx.reference,
-                                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        );
+                                Text(
+                                  tx.reference,
+                                  style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          );
+                        } catch (_) {
+                          return const ListTile(
+                            leading: Icon(Icons.receipt_long, color: AppColors.textSecondary),
+                            title: Text('Transaction', style: TextStyle(color: AppColors.textSecondary)),
+                          );
+                        }
                       },
                     ),
                   );
