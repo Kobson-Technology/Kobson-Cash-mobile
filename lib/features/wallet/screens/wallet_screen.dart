@@ -4,6 +4,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/balance_card.dart';
 import '../../../shared/widgets/custom_button.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../membership/screens/membership_payment_screen.dart';
 import '../providers/wallet_provider.dart';
 import 'transactions_screen.dart';
 import '../../withdrawals/screens/withdrawal_screen.dart';
@@ -11,10 +13,61 @@ import '../../withdrawals/screens/withdrawal_screen.dart';
 class WalletScreen extends ConsumerWidget {
   const WalletScreen({super.key});
 
+  void _showChestLockedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_rounded, color: Color(0xFFD97706), size: 26),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Coffre Verrouillé',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Les retraits sont réservés aux membres ayant activé leur Coffre aux Gains (4 500 FCFA). Obtenez votre Clé d\'Or pour débloquer les décaissements Mobile Money.',
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Fermer', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentGold,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MembershipPaymentScreen()),
+              );
+            },
+            icon: const Icon(Icons.vpn_key_rounded, size: 18),
+            label: const Text('Obtenir la Clé', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final walletAsync = ref.watch(walletProvider);
     final txAsync = ref.watch(walletTransactionsProvider);
+    final hasChest = ref.watch(authProvider).user?.hasActiveMembership ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -57,12 +110,18 @@ class WalletScreen extends ConsumerWidget {
                       availableBalance: wallet.availableBalance,
                       heldBalance: wallet.heldBalance,
                       currency: wallet.currency,
+                      hasActiveMembership: hasChest,
                       onWithdrawPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const WithdrawalScreen()),
-                        );
+                        if (!hasChest) {
+                          _showChestLockedDialog(context);
+                        } else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const WithdrawalScreen()),
+                          );
+                        }
                       },
                     ),
+
                     const SizedBox(height: 16),
                     // Hold Explanation Card
                     if (wallet.heldBalance > 0)
