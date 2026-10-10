@@ -465,8 +465,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
                               itemBuilder: (context, index) {
                                 final tx = dash.recentTransactions[index];
-                                final isCredit = tx.type.toLowerCase().contains('commission');
-                                final isHold = tx.type.toLowerCase().contains('hold');
+                                // type peut être un entier ('2') ou un nom ('referralcommission')
+                                final t = tx.type.trim().toLowerCase();
+                                final isCredit = t == '2' || t == '10' ||
+                                    t.contains('commission') || t.contains('questbonus') ||
+                                    t == '5' || t.contains('release') || t == '6' || t.contains('refund');
+                                final isHold = t == '4' || t.contains('hold');
 
                                 return ListTile(
                                   leading: CircleAvatar(
