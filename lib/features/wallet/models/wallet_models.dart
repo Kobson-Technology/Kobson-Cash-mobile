@@ -60,4 +60,20 @@ class WalletTransactionModel {
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
     );
   }
+
+  String get typeLabel {
+    const labels = {
+      '1': 'Adhésion',
+      '2': 'Commission parrainage',
+      '3': 'Retrait',
+      '4': 'Blocage retrait',
+      '5': 'Libération retrait',
+      '6': 'Frais de paiement',
+      '7': 'Remboursement',
+      '8': 'Ajustement',
+      '9': 'Revenu plateforme',
+      '10': 'Prime quête',
+    };
+    return labels[type] ?? 'Transaction';
+  }
 }

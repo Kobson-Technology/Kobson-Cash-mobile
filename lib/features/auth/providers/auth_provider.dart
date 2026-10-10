@@ -82,16 +82,8 @@ class AuthNotifier extends Notifier<AuthState> {
       final userData = res['user'] as Map<String, dynamic>;
 
       await TokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
-      var user = UserModel.fromJson(userData);
+      final user = UserModel.fromJson(userData);
       await TokenStorage.saveLastUser(identifier: identifier, userName: user.fullName);
-
-      // Hydrate profile data (including photo) immediately
-      try {
-        final profileRes = await _apiClient.get('/api/v1/members/me');
-        if (profileRes != null && profileRes['photo'] != null) {
-          user = user.copyWith(photo: profileRes['photo']);
-        }
-      } catch (_) {}
 
       state = state.copyWith(isLoading: false, isAuthenticated: true, user: user);
       return true;
