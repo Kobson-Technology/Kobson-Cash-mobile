@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network Security Config — Kobson Cash
+  Prouve aux antivirus que l'app ne peut télécharger que depuis des domaines de confiance :
+  - github.com / objects.githubusercontent.com → APK OTA update
+  - apicash.runasp.net → backend API
+  Aucune connexion cleartext (HTTP) autorisée → sécurité renforcée.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+
+    <!-- GitHub Releases — téléchargement OTA sécurisé -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">objects.githubusercontent.com</domain>
+        <domain includeSubdomains="true">codeload.github.com</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Backend API Kobson Cash -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">runasp.net</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+</network-security-config>
