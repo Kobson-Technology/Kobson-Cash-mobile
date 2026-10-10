@@ -87,30 +87,38 @@ class AppUpdateService {
     return false;
   }
 
-  /// Fetches latest version from Backend API with GitHub fallback
+  /// Fetches latest version — GitHub Releases is the authoritative source
   static Future<AppVersionInfo?> fetchLatestVersion(ApiClient apiClient) async {
-    // 1. Try backend version endpoint
+    // 1. GitHub Releases API — source de vérité principale
     try {
-      final res = await apiClient.get('/api/v1/config/version', requiresAuth: false);
-      return AppVersionInfo.fromJson(res);
-    } catch (_) {
-      // Backend endpoint might be unreachable or loading fallback
-    }
-
-    // 2. Direct GitHub Release API fallback
-    try {
-      final url = Uri.parse('https://api.github.com/repos/Kobson-Technology/Kobson-Cash-Versionnage/releases/latest');
-      final res = await http.get(url, headers: {'Accept': 'application/vnd.github.v3+json'});
+      final url = Uri.parse(
+          'https://api.github.com/repos/Kobson-Technology/Kobson-Cash-Versionnage/releases/latest');
+      final res = await http
+          .get(url, headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'KobsonCash-Android',
+          })
+          .timeout(const Duration(seconds: 8));
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
         return AppVersionInfo.fromGitHubRelease(data);
       }
     } catch (_) {
-      // Offline or network error
+      // Réseau indisponible ou délai dépassé
     }
+
+    // 2. Backend /api/v1/config/version — secours si disponible
+    try {
+      final res = await apiClient
+          .get('/api/v1/config/version', requiresAuth: false);
+      if (res is Map<String, dynamic>) {
+        return AppVersionInfo.fromJson(res);
+      }
+    } catch (_) {}
 
     return null;
   }
+
 
   /// Automatically checks for updates on startup/dashboard
   static Future<void> checkSilently(BuildContext context, WidgetRef ref) async {

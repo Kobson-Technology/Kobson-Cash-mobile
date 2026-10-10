@@ -56,6 +56,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ref.invalidate(dashboardProvider);
             ref.invalidate(levelProgressionProvider);
             await ref.read(authProvider.notifier).checkAuthStatus();
+            // Vérifie aussi les mises à jour à chaque pull-to-refresh
+            if (context.mounted) {
+              AppUpdateService.checkSilently(context, ref);
+            }
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
