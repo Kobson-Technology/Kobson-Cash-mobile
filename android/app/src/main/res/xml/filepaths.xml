@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chemins exposés par le FileProvider du plugin ota_update.
+  L'APK de mise à jour est téléchargé dans le dossier interne de l'application
+  (files/ota_update) puis partagé avec l'installateur Android.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="internal_apk_storage" path="ota_update/"/>
+</paths>

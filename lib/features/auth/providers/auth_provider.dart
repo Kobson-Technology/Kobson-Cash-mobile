@@ -60,6 +60,7 @@ class AuthNotifier extends Notifier<AuthState> {
         referralCode: res['referralCode'] ?? '',
         hasActiveMembership: res['hasActiveMembership'] == true,
         photo: res['photo'],
+        sponsorName: res['parentName'],
       );
       state = state.copyWith(isAuthenticated: true, user: user);
     } catch (_) {
@@ -99,7 +100,6 @@ class AuthNotifier extends Notifier<AuthState> {
     required String email,
     required String phoneNumber,
     required String password,
-    String? referralCode,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -111,7 +111,6 @@ class AuthNotifier extends Notifier<AuthState> {
           'email': email,
           'phoneNumber': phoneNumber,
           'password': password,
-          'referralCode': referralCode?.trim().isEmpty == true ? null : referralCode?.trim(),
         },
         requiresAuth: false,
       );
@@ -132,26 +131,12 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<bool> googleAuth({
-    required String email,
-    required String firstName,
-    required String lastName,
-    String? googleId,
-    String? referralCode,
-    String? password,
-  }) async {
+  Future<bool> googleAuth({required String idToken}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final res = await _apiClient.post(
         '/api/v1/auth/google',
-        body: {
-          'email': email,
-          'firstName': firstName,
-          'lastName': lastName,
-          'googleId': googleId,
-          'referralCode': (referralCode != null && referralCode.trim().isNotEmpty) ? referralCode.trim() : null,
-          if (password != null && password.isNotEmpty) 'password': password,
-        },
+        body: {'idToken': idToken},
         requiresAuth: false,
       );
 
@@ -161,12 +146,42 @@ class AuthNotifier extends Notifier<AuthState> {
 
       await TokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
       final user = UserModel.fromJson(userData);
-      await TokenStorage.saveLastUser(identifier: email, userName: user.fullName);
+      await TokenStorage.saveLastUser(identifier: user.email, userName: user.fullName);
 
       state = state.copyWith(isLoading: false, isAuthenticated: true, user: user);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  /// Vérifie une clé de parrain et retourne les informations du détenteur
+  /// (nom complet, email, téléphone) si la clé est valide et son Coffre actif.
+  Future<Map<String, dynamic>?> validateSponsorKey(String referralCode) async {
+    try {
+      final res = await _apiClient.post(
+        '/api/v1/referrals/sponsor/validate',
+        body: {'referralCode': referralCode.trim().toUpperCase()},
+      );
+      return res as Map<String, dynamic>;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return null;
+    }
+  }
+
+  /// Associe définitivement le parrain au compte (obligatoire avant l'activation du premier Coffre).
+  Future<bool> bindSponsor(String referralCode) async {
+    try {
+      await _apiClient.post(
+        '/api/v1/referrals/sponsor/bind',
+        body: {'referralCode': referralCode.trim().toUpperCase()},
+      );
+      await checkAuthStatus();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
       return false;
     }
   }

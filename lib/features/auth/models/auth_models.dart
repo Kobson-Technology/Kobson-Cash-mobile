@@ -6,6 +6,8 @@ class UserModel {
   final String referralCode;
   final bool hasActiveMembership;
   final String? photo;
+  /// Nom complet du parrain associé (null tant qu'aucune clé de parrain n'a été validée).
+  final String? sponsorName;
 
   UserModel({
     required this.id,
@@ -15,6 +17,7 @@ class UserModel {
     required this.referralCode,
     required this.hasActiveMembership,
     this.photo,
+    this.sponsorName,
   });
 
   UserModel copyWith({
@@ -25,6 +28,7 @@ class UserModel {
     String? referralCode,
     bool? hasActiveMembership,
     String? photo,
+    String? sponsorName,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -34,6 +38,7 @@ class UserModel {
       referralCode: referralCode ?? this.referralCode,
       hasActiveMembership: hasActiveMembership ?? this.hasActiveMembership,
       photo: photo ?? this.photo,
+      sponsorName: sponsorName ?? this.sponsorName,
     );
   }
 
@@ -46,6 +51,7 @@ class UserModel {
       referralCode: json['referralCode'] ?? '',
       hasActiveMembership: json['hasActiveMembership'] ?? false,
       photo: json['photo'],
+      sponsorName: json['parentName'],
     );
   }
 }

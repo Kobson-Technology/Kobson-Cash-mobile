@@ -18,6 +18,10 @@ class AppVersionInfo {
   final String releaseNotes;
   final bool forceUpdate;
 
+  /// Empreinte SHA-256 de l'APK (fournie par GitHub Releases) : vérifie l'intégrité
+  /// du fichier téléchargé avant lancement de l'installation.
+  final String? sha256;
+
   AppVersionInfo({
     required this.latestVersion,
     required this.latestBuildNumber,
@@ -25,6 +29,7 @@ class AppVersionInfo {
     required this.downloadUrl,
     required this.releaseNotes,
     required this.forceUpdate,
+    this.sha256,
   });
 
   factory AppVersionInfo.fromJson(Map<String, dynamic> json) {
@@ -35,6 +40,7 @@ class AppVersionInfo {
       downloadUrl: json['downloadUrl']?.toString() ?? AppConfig.fallbackDownloadUrl,
       releaseNotes: json['releaseNotes']?.toString() ?? 'Mise à jour disponible avec améliorations et corrections.',
       forceUpdate: json['forceUpdate'] == true,
+      sha256: json['sha256']?.toString(),
     );
   }
 
@@ -44,14 +50,26 @@ class AppVersionInfo {
     final body = json['body']?.toString() ?? 'Nouvelle version disponible.';
 
     String downloadUrl = AppConfig.fallbackDownloadUrl;
+    String? sha256;
+
     final assets = json['assets'] as List<dynamic>?;
-    if (assets != null && assets.isNotEmpty) {
-      final apkAsset = assets.firstWhere(
-        (a) => a['name']?.toString().endsWith('.apk') == true,
-        orElse: () => assets.first,
-      );
-      if (apkAsset != null && apkAsset['browser_download_url'] != null) {
-        downloadUrl = apkAsset['browser_download_url'];
+    if (assets != null) {
+      // Ne jamais retomber sur un asset non-APK : un fichier invalide ferait échouer/planter l'installation.
+      final apkAssets = assets.where((a) {
+        return a is Map && a['name']?.toString().toLowerCase().endsWith('.apk') == true;
+      }).toList();
+
+      if (apkAssets.isNotEmpty) {
+        final apk = apkAssets.first as Map;
+        final url = apk['browser_download_url']?.toString();
+        if (url != null && url.isNotEmpty) {
+          downloadUrl = url;
+        }
+        // GitHub expose une empreinte "sha256:<hex>" pour chaque asset.
+        final digest = apk['digest']?.toString();
+        if (digest != null && digest.startsWith('sha256:')) {
+          sha256 = digest.substring('sha256:'.length);
+        }
       }
     }
 
@@ -62,6 +80,7 @@ class AppVersionInfo {
       downloadUrl: downloadUrl,
       releaseNotes: body,
       forceUpdate: false,
+      sha256: sha256,
     );
   }
 }
@@ -215,6 +234,9 @@ class _InAppUpdateDialogState extends State<_InAppUpdateDialog> {
       OtaUpdate().execute(
         widget.info.downloadUrl,
         destinationFilename: 'KobsonCash_${widget.info.latestVersion}.apk',
+        // Vérifie l'intégrité du fichier téléchargé avant l'installation (évite les
+        // installations corrompues qui font planter l'installateur Android).
+        sha256checksum: widget.info.sha256,
       ).listen(
         (OtaEvent event) {
           if (!mounted) return;
@@ -232,6 +254,12 @@ class _InAppUpdateDialogState extends State<_InAppUpdateDialog> {
                 _statusText = 'Ouverture de l\'installateur Android...';
               });
               break;
+            case OtaStatus.INSTALLATION_DONE:
+              setState(() {
+                _progress = 100.0;
+                _statusText = 'Mise à jour installée avec succès.';
+              });
+              break;
             case OtaStatus.ALREADY_RUNNING_ERROR:
               setState(() {
                 _statusText = 'Un téléchargement est déjà en cours...';
@@ -240,16 +268,35 @@ class _InAppUpdateDialogState extends State<_InAppUpdateDialog> {
             case OtaStatus.PERMISSION_NOT_GRANTED_ERROR:
               setState(() {
                 _isDownloading = false;
-                _errorMessage = 'Permission requise pour installer l\'application.';
+                _errorMessage =
+                    'Permission refusée. Autorisez « Installer des applications inconnues » pour Kobson Cash, puis réessayez.';
+              });
+              break;
+            case OtaStatus.INSTALLATION_ERROR:
+              setState(() {
+                _isDownloading = false;
+                _errorMessage =
+                    'L\'installation a été refusée ou a échoué${event.value != null && event.value!.isNotEmpty ? ' (${event.value})' : ''}. Réessayez ou passez par le navigateur.';
+              });
+              break;
+            case OtaStatus.CHECKSUM_ERROR:
+              setState(() {
+                _isDownloading = false;
+                _errorMessage = 'Le fichier téléchargé est corrompu (vérification d\'intégrité échouée). Réessayez.';
+              });
+              break;
+            case OtaStatus.CANCELED:
+              setState(() {
+                _isDownloading = false;
+                _statusText = 'Mise à jour annulée.';
               });
               break;
             case OtaStatus.INTERNAL_ERROR:
             case OtaStatus.DOWNLOAD_ERROR:
-            case OtaStatus.CHECKSUM_ERROR:
-            default:
               setState(() {
                 _isDownloading = false;
-                _errorMessage = 'Le téléchargement direct a échoué. Utilisez le lien ci-dessous.';
+                _errorMessage =
+                    'Le téléchargement direct a échoué${event.value != null && event.value!.isNotEmpty ? ' (${event.value})' : ''}. Utilisez le lien ci-dessous.';
               });
               break;
           }

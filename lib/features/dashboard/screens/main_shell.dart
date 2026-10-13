@@ -4,7 +4,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../membership/screens/membership_payment_screen.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../referral/providers/referral_provider.dart';
 import '../../referral/screens/referral_screen.dart';
+import '../../wallet/providers/wallet_provider.dart';
 import '../../wallet/screens/wallet_screen.dart';
 import '../../withdrawals/screens/withdrawal_screen.dart';
 import 'dashboard_screen.dart';
@@ -45,6 +47,19 @@ class _MainShellState extends ConsumerState<MainShell> {
         return;
       }
     }
+
+    // Les pages sont conservées vivantes dans un IndexedStack : les providers
+    // autoDispose ne sont donc jamais rechargés automatiquement. On force le
+    // rafraîchissement à l'ouverture de l'onglet pour éviter tout état périmé
+    // (ex : clé de parrainage restant verrouillée après l'activation du coffre).
+    if (index == 3) {
+      ref.invalidate(referralTreeProvider);
+      ref.invalidate(levelProgressionProvider);
+    } else if (index == 1) {
+      ref.invalidate(walletProvider);
+      ref.invalidate(walletTransactionsProvider);
+    }
+
     setState(() => _currentIndex = index);
   }
 

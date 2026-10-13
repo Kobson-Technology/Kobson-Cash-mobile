@@ -37,7 +37,13 @@ class ReferralScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: treeAsync.when(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(referralTreeProvider);
+          ref.invalidate(levelProgressionProvider);
+          await ref.read(referralTreeProvider.future);
+        },
+        child: treeAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Erreur: $err')),
         data: (tree) {
@@ -46,6 +52,7 @@ class ReferralScreen extends ConsumerWidget {
           final link = isLocked ? '' : 'https://cash.kobsontech.com/register?ref=$code';
 
           return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -284,6 +291,7 @@ class ReferralScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
       ),
     );
   }

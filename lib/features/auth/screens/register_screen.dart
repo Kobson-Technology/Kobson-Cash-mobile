@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/services/google_sign_in_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -10,9 +11,7 @@ import '../../dashboard/screens/main_shell.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  final String? initialReferralCode;
-
-  const RegisterScreen({super.key, this.initialReferralCode});
+  const RegisterScreen({super.key});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -26,19 +25,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  late final TextEditingController _referralCodeController;
 
   int _currentStep = 0; // 0 = Seul Google apparaît, 1 = Formulaire à remplir
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = true;
-  final bool _isGoogleSelecting = false;
+  bool _isGoogleSelecting = false;
   CountryDialCode _selectedCountry = kSupportedCountries[0];
 
   @override
   void initState() {
     super.initState();
-    _referralCodeController = TextEditingController(text: widget.initialReferralCode ?? '');
   }
 
   @override
@@ -49,142 +46,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _referralCodeController.dispose();
     super.dispose();
   }
 
   Future<void> _handleGoogleSelection() async {
-    final googleEmailCtrl = TextEditingController(text: _emailController.text);
-    final googleFirstNameCtrl = TextEditingController(text: _firstNameController.text.isNotEmpty ? _firstNameController.text : 'Kouamé');
-    final googleLastNameCtrl = TextEditingController(text: _lastNameController.text.isNotEmpty ? _lastNameController.text : 'Konan');
-    String? localError;
+    setState(() => _isGoogleSelecting = true);
+    try {
+      final info = await GoogleSignInService.signIn();
+      if (!mounted) return;
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Row(
-                    children: [
-                      CustomPaint(
-                        size: Size(26, 26),
-                        painter: GoogleLogoPainter(),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Connexion avec Google',
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Sélectionnez votre compte Google pour initialiser votre inscription en toute sécurité.',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
-                  ),
-                  const SizedBox(height: 18),
+      final nameParts = (info.displayName ?? '').trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
 
-                  if (localError != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.errorRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(localError!, style: const TextStyle(color: AppColors.errorRed, fontSize: 13)),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
+      setState(() {
+        _isGoogleSelecting = false;
+        _emailController.text = info.email;
+        if (nameParts.isNotEmpty && _firstNameController.text.isEmpty) {
+          _firstNameController.text = nameParts.first;
+        }
+        if (nameParts.length > 1 && _lastNameController.text.isEmpty) {
+          _lastNameController.text = nameParts.sublist(1).join(' ');
+        }
+        _currentStep = 1; // Passage au formulaire d'inscription officiel complété
+      });
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Prénom',
-                          hintText: 'ex: Kouamé',
-                          controller: googleFirstNameCtrl,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Nom',
-                          hintText: 'ex: Konan',
-                          controller: googleLastNameCtrl,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  CustomTextField(
-                    label: 'Adresse Email Google',
-                    hintText: 'ex: votre.compte@gmail.com',
-                    controller: googleEmailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 22),
-
-                  CustomButton(
-                    text: 'Continuer avec ce compte',
-                    isLoading: _isGoogleSelecting,
-                    onPressed: () {
-                      final email = googleEmailCtrl.text.trim();
-                      if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-                        setSheetState(() => localError = 'Veuillez saisir une adresse email Google valide');
-                        return;
-                      }
-
-                      setState(() {
-                        _emailController.text = email;
-                        _firstNameController.text = googleFirstNameCtrl.text.trim();
-                        _lastNameController.text = googleLastNameCtrl.text.trim();
-                        _currentStep = 1; // Passage au formulaire complet
-                      });
-
-                      Navigator.of(ctx).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Compte Google connecté. Vérifiez et complétez le formulaire d\'inscription officiel.'),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isGoogleSelecting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Connexion Google impossible : $e'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+    }
   }
 
   Future<void> _handleRegister() async {
@@ -202,7 +101,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
-    final refCode = _referralCodeController.text.trim();
 
     if (firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -245,7 +143,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           email: email,
           phoneNumber: formattedPhone,
           password: _passwordController.text,
-          referralCode: refCode.isNotEmpty ? refCode : null,
         );
 
     if (success && mounted) {
@@ -581,22 +478,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             selectedCountry: _selectedCountry,
             onCountryChanged: (c) => setState(() => _selectedCountry = c),
             phoneController: _phoneController,
-          ),
-          const SizedBox(height: 16),
-
-          CustomTextField(
-            label: 'La clef du parrain (Optionnel)',
-            hintText: 'ex: KC-7X8Y9Z (Laisser vide si aucun parrain)',
-            controller: _referralCodeController,
-            prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.accentGold),
-          ),
-          const SizedBox(height: 6),
-          const Padding(
-            padding: EdgeInsets.only(left: 4),
-            child: Text(
-              '💡 Si vous n\'avez pas de parrain, laissez ce champ vide. Vous serez automatiquement rattaché au compte officiel de Kobson Cash.',
-              style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
-            ),
           ),
           const SizedBox(height: 16),
 

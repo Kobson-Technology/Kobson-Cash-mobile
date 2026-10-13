@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../../core/services/google_sign_in_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -76,193 +77,103 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    final googleEmailController = TextEditingController();
-    final googlePasswordController = TextEditingController();
-    bool obscureGooglePassword = true;
-    String? localError;
+    setState(() => _isGoogleLoading = true);
+    try {
+      final idToken = await GoogleSignInService.signInAndGetIdToken();
 
-    await showModalBottomSheet(
+      if (!mounted) return;
+
+      if (idToken == null || idToken.isEmpty) {
+        setState(() => _isGoogleLoading = false);
+        _showGoogleError('Connexion Google annulée ou jeton d\'identité indisponible.');
+        return;
+      }
+
+      final success = await ref.read(authProvider.notifier).googleAuth(idToken: idToken);
+
+      if (!mounted) return;
+      setState(() => _isGoogleLoading = false);
+
+      if (success) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainShell()),
+          (route) => false,
+        );
+      } else {
+        _showGoogleError(ref.read(authProvider).error ?? 'Erreur lors de l\'authentification Google');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isGoogleLoading = false);
+      _showGoogleError(e.toString());
+    }
+  }
+
+  void _showGoogleError(String message) {
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Row(
                 children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Row(
-                    children: [
-                      CustomPaint(
-                        size: Size(26, 26),
-                        painter: GoogleLogoPainter(),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Connexion via Google',
-                          style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Accédez à votre compte Google enregistré. Votre mot de passe secret est requis pour accéder à vos fonds.',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.3),
-                  ),
-                  const SizedBox(height: 18),
-
-                  if (localError != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.errorRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(localError!, style: const TextStyle(color: AppColors.errorRed, fontSize: 13, height: 1.3)),
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: () {
-                              Navigator.of(ctx).pop();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                              );
-                            },
-                            child: const Text(
-                              '👉 Ouvrir le formulaire d\'inscription officiel',
-                              style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
-
-                  CustomTextField(
-                    label: 'Adresse Email Google',
-                    hintText: 'ex: votre.compte@gmail.com',
-                    controller: googleEmailController,
-                    keyboardType: TextInputType.emailAddress,
-                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 14),
-
-                  CustomTextField(
-                    label: 'Mot de passe secret Kobson Cash',
-                    hintText: '••••••••',
-                    controller: googlePasswordController,
-                    obscureText: obscureGooglePassword,
-                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscureGooglePassword ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.textSecondary,
-                      ),
-                      onPressed: () => setSheetState(() => obscureGooglePassword = !obscureGooglePassword),
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-                  CustomButton(
-                    text: 'Déverrouiller l\'accès',
-                    isLoading: _isGoogleLoading,
-                    onPressed: () async {
-                      final email = googleEmailController.text.trim();
-                      final pass = googlePasswordController.text;
-                      if (email.isEmpty) {
-                        setSheetState(() => localError = 'Veuillez saisir votre email Google');
-                        return;
-                      }
-                      if (pass.isEmpty) {
-                        setSheetState(() => localError = 'Veuillez saisir votre mot de passe secret');
-                        return;
-                      }
-                      setSheetState(() {
-                        localError = null;
-                        _isGoogleLoading = true;
-                      });
-
-                      final navigator = Navigator.of(context);
-                      final success = await ref.read(authProvider.notifier).googleAuth(
-                            email: email,
-                            firstName: '',
-                            lastName: '',
-                            password: pass,
-                            referralCode: null,
-                          );
-
-                      if (!mounted) return;
-                      setSheetState(() => _isGoogleLoading = false);
-
-                      if (success) {
-                        if (ctx.mounted) {
-                          Navigator.of(ctx).pop();
-                        }
-                        navigator.pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (_) => const MainShell()),
-                          (route) => false,
-                        );
-                      } else {
-                        final err = ref.read(authProvider).error ?? 'Erreur lors de l\'authentification Google';
-                        setSheetState(() => localError = err);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Pas encore de compte ?',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                        ),
-                        const SizedBox(height: 4),
-                        TextButton.icon(
-                          icon: const Icon(Icons.person_add_outlined, size: 18, color: AppColors.primaryBlue),
-                          label: const Text(
-                            'S\'inscrire via le formulaire officiel',
-                            style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
-                          ),
-                          onPressed: () {
-                            Navigator.of(ctx).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                            );
-                          },
-                        ),
-                      ],
+                  CustomPaint(size: Size(26, 26), painter: GoogleLogoPainter()),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Connexion via Google',
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.errorRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
+                ),
+                child: Text(message, style: const TextStyle(color: AppColors.errorRed, fontSize: 13, height: 1.3)),
+              ),
+              const SizedBox(height: 16),
+              TextButton.icon(
+                icon: const Icon(Icons.person_add_outlined, size: 18, color: AppColors.primaryBlue),
+                label: const Text(
+                  'S\'inscrire via le formulaire officiel',
+                  style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),

@@ -6,8 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/animated_glowing_chest.dart';
 import '../../../shared/widgets/custom_button.dart';
+import '../../../shared/widgets/custom_text_field.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
+import '../../referral/providers/referral_provider.dart';
 import '../../../shared/widgets/operator_brand_logo.dart';
 
 class MembershipPaymentScreen extends ConsumerStatefulWidget {
@@ -20,6 +22,24 @@ class MembershipPaymentScreen extends ConsumerStatefulWidget {
 class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScreen> {
   bool _isLoading = false;
   String? _checkoutUrl;
+
+  final _sponsorController = TextEditingController();
+  bool _isSponsorBound = false;
+  bool _isVerifyingSponsor = false;
+  Map<String, dynamic>? _sponsorInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rafraîchit un éventuel parrain déjà associé (parentName exposé par l'API).
+    Future.microtask(() => ref.read(authProvider.notifier).checkAuthStatus());
+  }
+
+  @override
+  void dispose() {
+    _sponsorController.dispose();
+    super.dispose();
+  }
 
   Future<void> _initiatePayment() async {
     setState(() => _isLoading = true);
@@ -85,6 +105,11 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
 
       await ref.read(authProvider.notifier).checkAuthStatus();
       ref.invalidate(dashboardProvider);
+      // La clé de parrainage et la progression de niveaux dépendent du coffre actif :
+      // on force leur rechargement immédiatement après l'activation.
+      ref.invalidate(referralTreeProvider);
+      ref.invalidate(levelProgressionProvider);
+      ref.invalidate(questsProvider);
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -120,6 +145,7 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
   @override
   Widget build(BuildContext context) {
     final configAsync = ref.watch(configProvider);
+    final hasSponsor = _isSponsorBound || ((ref.watch(authProvider).user?.sponsorName ?? '').isNotEmpty);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -370,13 +396,27 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
 
                 const SizedBox(height: 32),
 
+                // Étape obligatoire : valider la clé du parrain AVANT l'activation du premier Coffre
+                _buildSponsorSection(hasSponsor),
+                const SizedBox(height: 20),
+
                 if (_checkoutUrl == null) ...[
                   CustomButton(
                     text: 'Activer le Coffre & Obtenir la Clé',
                     icon: Icons.vpn_key_rounded,
                     isLoading: _isLoading,
-                    onPressed: _initiatePayment,
+                    onPressed: hasSponsor ? _initiatePayment : null,
                   ),
+                  if (!hasSponsor) ...[
+                    const SizedBox(height: 8),
+                    const Center(
+                      child: Text(
+                        'Validez d\'abord la clé de votre parrain pour activer votre Coffre.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
                 ] else ...[
                   CustomButton(
                     text: 'Payer & Débloquer la Clé',
@@ -409,6 +449,198 @@ class _MembershipPaymentScreenState extends ConsumerState<MembershipPaymentScree
           );
         },
       ),
+    );
+  }
+
+  Widget _buildSponsorSection(bool hasSponsor) {
+    if (hasSponsor) {
+      final user = ref.watch(authProvider).user;
+      final detail = _sponsorInfo != null
+          ? '${_sponsorInfo!['fullName']} • ${_sponsorInfo!['phoneNumber']}'
+          : (user?.sponsorName ?? '');
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.successGreen.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.verified_user_rounded, color: AppColors.successGreen),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Parrain validé', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  if (detail.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(detail, style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary)),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.vpn_key_outlined, color: AppColors.accentGold, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Clé du parrain (obligatoire)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Saisissez la clé de la personne qui vous a parrainé. Elle doit être vérifiée et validée avant l\'activation de votre premier Coffre.',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
+          ),
+          const SizedBox(height: 12),
+          CustomTextField(
+            label: 'Clé du parrain',
+            hintText: 'ex: KBCAB12CD',
+            controller: _sponsorController,
+            prefixIcon: const Icon(Icons.key_outlined, color: AppColors.accentGold),
+          ),
+          const SizedBox(height: 12),
+          if (_sponsorInfo == null) ...[
+            CustomButton(
+              text: 'Vérifier la clé',
+              icon: Icons.search_rounded,
+              isLoading: _isVerifyingSponsor,
+              onPressed: _verifySponsor,
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Détenteur de la clé', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary)),
+                  const SizedBox(height: 8),
+                  _buildSponsorInfoRow(Icons.person_outline, 'Nom complet', _sponsorInfo!['fullName']?.toString() ?? ''),
+                  _buildSponsorInfoRow(Icons.email_outlined, 'Adresse email', _sponsorInfo!['email']?.toString() ?? ''),
+                  _buildSponsorInfoRow(Icons.phone_outlined, 'Numéro de téléphone', _sponsorInfo!['phoneNumber']?.toString() ?? ''),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Identifiants partiellement masqués pour la confidentialité.',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            CustomButton(
+              text: 'Confirmer ce parrain',
+              icon: Icons.check_circle_outline,
+              isLoading: _isVerifyingSponsor,
+              backgroundColor: AppColors.successGreen,
+              onPressed: _confirmSponsor,
+            ),
+            const SizedBox(height: 6),
+            Center(
+              child: TextButton(
+                onPressed: _isVerifyingSponsor ? null : () => setState(() => _sponsorInfo = null),
+                child: const Text('Saisir une autre clé', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSponsorInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary),
+                children: [
+                  TextSpan(text: '$label : ', style: const TextStyle(color: AppColors.textSecondary)),
+                  TextSpan(text: value, style: const TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _verifySponsor() async {
+    final code = _sponsorController.text.trim();
+    if (code.isEmpty) {
+      _snack('Veuillez saisir la clé de votre parrain.', AppColors.accentGold);
+      return;
+    }
+
+    setState(() => _isVerifyingSponsor = true);
+    final info = await ref.read(authProvider.notifier).validateSponsorKey(code);
+    if (!mounted) return;
+
+    setState(() {
+      _isVerifyingSponsor = false;
+      _sponsorInfo = info;
+    });
+
+    if (info == null) {
+      final err = ref.read(authProvider).error ?? 'Clé de parrain invalide.';
+      _snack(err, AppColors.errorRed);
+    }
+  }
+
+  Future<void> _confirmSponsor() async {
+    final code = _sponsorController.text.trim();
+    setState(() => _isVerifyingSponsor = true);
+
+    final ok = await ref.read(authProvider.notifier).bindSponsor(code);
+    if (!mounted) return;
+
+    setState(() {
+      _isVerifyingSponsor = false;
+      if (ok) _isSponsorBound = true;
+    });
+
+    _snack(
+      ok ? 'Parrain associé avec succès.' : (ref.read(authProvider).error ?? 'Échec de l\'association du parrain.'),
+      ok ? AppColors.successGreen : AppColors.errorRed,
+    );
+  }
+
+  void _snack(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
     );
   }
 
