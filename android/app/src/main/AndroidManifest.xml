@@ -1,9 +1,23 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+
+    <!--
+      Permissions ajoutées par des plugins (ota_update) mais NON nécessaires ici.
+      On les retire explicitement du manifeste fusionné :
+      - INSTALL_PACKAGES : réservée aux applications système (installation silencieuse).
+        Inutile pour une app normale et principal déclencheur des faux positifs antivirus
+        (comportement « dropper »). Le plugin bascule alors sur l'installateur Android standard.
+      - WRITE_EXTERNAL_STORAGE : obsolète — l'APK de mise à jour est téléchargé dans le
+        stockage INTERNE de l'application (files/ota_update).
+    -->
+    <uses-permission android:name="android.permission.INSTALL_PACKAGES" tools:node="remove"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove"/>
     <application
         android:label="Kobson Cash"
         android:name="${applicationName}"
