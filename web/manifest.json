@@ -4,7 +4,7 @@
   "start_url": ".",
   "display": "standalone",
   "background_color": "#111111",
-  "theme_color": "#F0A500",
+  "theme_color": "#0055FF",
   "description": "Kobson Cash — cotisations, commissions et retraits mobile money, par Kobson Technology.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
