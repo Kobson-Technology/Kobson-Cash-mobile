@@ -10,15 +10,22 @@
 # davantage. Mise bout à bout, elle était tronquée en silence — le déploiement échouait sans que la
 # cause soit lisible.
 #
-# L'adresse de l'API est fournie à la compilation par `--dart-define` : c'est une constante du
-# bundle, pas une variable lue à l'exécution. La changer demande donc une RECONSTRUCTION.
+# Les variables de l'application mobile sont fournies à la compilation par `--dart-define` :
+# ce sont des constantes du bundle, pas des variables lues à l'exécution. Les changer demande
+# donc une RECONSTRUCTION.
+#
+# Variables de compilation transmises à l'application (toutes celles utilisées par le mobile) :
+#   API_BASE_URL             adresse de l'API REST. Défaut : https://apicash.runasp.net
+#   GOOGLE_SERVER_CLIENT_ID  client OAuth 2.0 « Web » requis par Google Sign-In.
+#                            Défaut : vide -> la connexion Google reste inactive sur le web.
 #
 # Variable facultative dans Vercel :
-#   FLUTTER_VERSION   « stable » par défaut — À FIGER pour des constructions reproductibles.
+#   FLUTTER_VERSION          « stable » par défaut — À FIGER pour des constructions reproductibles.
 #
 set -euo pipefail
 
 API="${API_BASE_URL:-https://apicash.runasp.net}"
+GOOGLE_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-}"
 FLUTTER_VERSION="${FLUTTER_VERSION:-stable}"
 FLUTTER_DIR="${HOME}/flutter-sdk"
 
@@ -33,8 +40,11 @@ export PUB_CACHE="${HOME}/.pub-cache"
 flutter config --no-analytics --enable-web >/dev/null
 flutter pub get
 
+# Toutes les variables de compilation de l'application sont transmises ici, exactement comme
+# pour une construction mobile : aucune ne doit rester à sa valeur par défaut par oubli.
 flutter build web \
   --release \
-  --dart-define=API_BASE_URL="${API}"
+  --dart-define=API_BASE_URL="${API}" \
+  --dart-define=GOOGLE_SERVER_CLIENT_ID="${GOOGLE_CLIENT_ID}"
 
 echo "Construction terminee : build/web"
