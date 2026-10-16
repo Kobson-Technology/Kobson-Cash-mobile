@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../config/app_config.dart';
@@ -25,6 +26,15 @@ class GoogleSignInService {
 
   static Future<void> _ensureInitialized() async {
     if (_initialized) return;
+
+    // Le web (PWA) n'utilise pas Google : l'authentification y est e-mail / mot de passe.
+    // Cette garde évite toute tentative d'initialisation sur le web.
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'La connexion Google n\'est pas disponible sur le web. '
+        'Utilisez votre adresse e-mail et votre mot de passe.',
+      );
+    }
 
     final serverClientId = AppConfig.googleServerClientId.trim();
     if (serverClientId.isEmpty) {

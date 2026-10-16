@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/token_storage.dart';
@@ -372,7 +373,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: _handleLogin,
                   ),
 
-                  if (!_isRememberedUser) ...[
+                  // Sur le web (PWA), pas de connexion Google : e-mail / mot de passe uniquement,
+                  // comme le reste de la plateforme (méthode K-Lover). Google reste sur Android.
+                  if (!_isRememberedUser && !kIsWeb) ...[
                     const SizedBox(height: 20),
                     Row(
                       children: [

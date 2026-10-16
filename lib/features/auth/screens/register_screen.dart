@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/google_sign_in_service.dart';
@@ -26,7 +27,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  int _currentStep = 0; // 0 = Seul Google apparaît, 1 = Formulaire à remplir
+  // 0 = étape Google (Android uniquement), 1 = formulaire à remplir.
+  // Sur le web (PWA), l'inscription se fait directement par formulaire (e-mail/mot de passe).
+  int _currentStep = kIsWeb ? 1 : 0;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = true;
@@ -160,11 +163,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(_currentStep == 0 ? 'Créer un compte' : 'Finaliser l\'inscription'),
+        title: Text(
+          _currentStep == 0 || kIsWeb ? 'Créer un compte' : 'Finaliser l\'inscription',
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
-        leading: _currentStep == 1
+        // Sur le web, il n'y a pas d'étape Google : aucun retour vers un écran Google.
+        leading: (_currentStep == 1 && !kIsWeb)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => setState(() => _currentStep = 0),
@@ -340,8 +346,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Badge du compte Google associé si renseigné
-          if (_emailController.text.isNotEmpty) ...[
+          // Badge du compte Google associé (Android uniquement : sur le web, l'e-mail est saisi
+          // à la main, il ne s'agit pas d'un compte Google).
+          if (!kIsWeb && _emailController.text.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
