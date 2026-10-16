@@ -14,13 +14,19 @@
 # ce sont des constantes du bundle, pas des variables lues à l'exécution. Les changer demande
 # donc une RECONSTRUCTION.
 #
-# Variables de compilation transmises à l'application (toutes celles utilisées par le mobile) :
+# Variables de compilation transmises à l'application :
 #   API_BASE_URL             adresse de l'API REST. Défaut : https://apicash.runasp.net
-#   GOOGLE_SERVER_CLIENT_ID  client OAuth 2.0 « Web » requis par Google Sign-In.
-#                            Défaut : vide -> la connexion Google reste inactive sur le web.
+#   GOOGLE_SERVER_CLIENT_ID  client OAuth 2.0 « Web » de Google Sign-In.
+#                            Défaut : vide. Depuis que la connexion Google est retirée du web
+#                            (e-mail / mot de passe sur la PWA), cette variable n'est plus
+#                            nécessaire ; elle reste acceptée, sans effet.
 #
 # Variable facultative dans Vercel :
 #   FLUTTER_VERSION          « stable » par défaut — À FIGER pour des constructions reproductibles.
+#                            ATTENTION : la version figée DOIT embarquer un Dart >= 3.12.2
+#                            (contrainte `environment.sdk` du pubspec). Exemple vérifié : 3.47.7
+#                            (Dart 3.13.5). Une version trop ancienne — 3.24.1 (Dart 3.5.1) —
+#                            fait échouer `flutter pub get` : « requires SDK version ^3.12.2 ».
 #
 set -euo pipefail
 
@@ -36,6 +42,9 @@ fi
 
 export PATH="${FLUTTER_DIR}/bin:${PATH}"
 export PUB_CACHE="${HOME}/.pub-cache"
+
+# Trace la version réellement employée : un décalage du SDK Dart devient lisible dans les journaux.
+flutter --version
 
 flutter config --no-analytics --enable-web >/dev/null
 flutter pub get
