@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "echo \"Aucune dependance npm ici : Flutter est installe par la commande de construction.\"",
-  "buildCommand": "git clone --depth 1 --branch stable https://github.com/flutter/flutter.git $HOME/flutter-sdk && export PATH=$HOME/flutter-sdk/bin:$PATH && flutter config --no-analytics --enable-web >/dev/null && flutter pub get && flutter build web --release --dart-define=API_BASE_URL=https://apicash.runasp.net",
+  "installCommand": "echo \"Aucune dependance npm ici : Flutter est installe par le script de construction.\"",
+  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "build/web",
   "rewrites": [
     {
