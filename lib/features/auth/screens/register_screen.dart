@@ -550,6 +550,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             isLoading: authState.isLoading,
             onPressed: _handleRegister,
           ),
+
+          // Sur le web, l'étape Google est absente : on offre un retour direct vers la connexion.
+          if (kIsWeb) ...[
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Déjà un compte ? ',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  ),
+                  child: const Text(
+                    'Se connecter',
+                    style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
           const SizedBox(height: 24),
         ],
       ),
