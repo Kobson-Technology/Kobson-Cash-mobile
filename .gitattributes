@@ -1,0 +1,3 @@
+# Les scripts bash DOIVENT rester en LF : un fichier en CRLF fait echouer bash sur set -euo pipefail
+# (il lit « pipefail\r », un nom d option invalide).
+*.sh text eol=lf
